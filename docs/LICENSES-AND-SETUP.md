@@ -11,6 +11,7 @@ Why it works this way: the pose and realistic-costume images have no stated lice
 
 - The code in this repository is MIT. Owner: Vito Sansevero. See `LICENSE`.
 - The English names in `locales/en/data.json` are this project's translations, also MIT. The Chinese names they translate come from the gallery project's data.
+- Parts of the code are adapted from the gallery project's ComfyUI nodes ([anhao/ai-pose-gallery-zh](https://github.com/anhao/ai-pose-gallery-zh), MIT, Copyright (c) 2026 Anhao): costume view selection, the safe-mode category lists and the Chinese prompt wording.
 - The gallery images are third-party reference material, under the terms in the table below. They are not under this repository's licence.
 
 ## Where the images come from

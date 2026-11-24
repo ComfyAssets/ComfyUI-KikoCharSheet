@@ -11,6 +11,24 @@ Four ComfyUI nodes that pick references for a character sheet and prepare them f
 
 All four are in the `CharSheet` category. Each picker shows a browsable panel inside the node, with search, filters, safe mode, your own uploads and a full-screen view. The panel follows the ComfyUI language (English or Chinese).
 
+## What this pack changes and adds
+
+The galleries and the idea of picking a portrait, a costume and a pose come from the projects credited below. This pack is a new set of nodes built around them. What is different here:
+
+- **English throughout.** Every pose name, costume name, category, tag and hairstyle has an English translation (2,341 names, in `locales/en/data.json`). The pickers show them when ComfyUI is set to English, and the prompt outputs come in English and Chinese. The gallery project itself is in Chinese.
+- **Your own images.** Each picker has an upload tile. Your pictures are stored in ComfyUI's own `input/charsheet/` folder, never inside this pack, and appear in the picker next to the gallery items. Portrait uploads get a 4:5 crop frame you can drag.
+- **Pickers inside the node.** The gallery opens as a panel in the node itself, with search, filters, safe mode and a full-screen view. This follows the in-node panel of the H3 Character Sheet Designer; the gallery project's own ComfyUI nodes use a pop-up window.
+- **Several poses at once.** The Pose Picker takes up to 13 poses in an order you choose, with a flip switch per pose and a choice of mannequin or depth images.
+- **A pose sheet for MiniMax H3.** The Pose Sheet Designer lays the chosen poses out on one image and writes the prompt for it, so one generation gives the same character in every pose. It is modelled on the H3 Character Sheet Designer, which does this for fixed views (front, side, back) but not for free poses.
+- **Prompt controls.** A style sentence you can edit, a switch for including the footwear, and wording that tells the model to copy the outfit from the picture.
+
+### Nodes this pack is modelled on
+
+- **The gallery project's ComfyUI nodes** ([anhao/ai-pose-gallery-zh](https://github.com/anhao/ai-pose-gallery-zh)): its Pose, Costume and Portrait pickers are the starting point for the three pickers here.
+- **H3 Character Sheet Designer** ([ukr8b3g-cmyk](https://github.com/ukr8b3g-cmyk/H3-Character-Sheet-Designer)): the in-node panel, keeping the panel's state in one hidden field, and the idea of a designer node that outputs a layout image, a prompt and a size for MiniMax H3.
+
+Some logic is adapted from the gallery project's nodes, which are MIT licensed: how a costume's views are chosen, which categories safe mode hides, and the Chinese prompt wording. The H3 Character Sheet Designer's approach was followed, not its code. No images from either are included.
+
 ## Three ways to use poses
 
 1. **Pose sheet.** Pose Picker, then Pose Sheet Designer, then H3 Image Conditioning. The designer outputs `prompt`, `width`, `height` and `image_1` to `image_3` (character, layout, outfit). Workflow: `workflows/charsheet-minimax-h3-pose-sheet.json`.
