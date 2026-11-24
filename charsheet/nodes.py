@@ -144,6 +144,9 @@ class CharSheetPortrait(_PickerNode):
 
 class CharSheetCostume(_PickerNode):
     LIB = "costume"
+    # The footwear outputs carry only the footwear instruction, for prompts that leave the garment list out.
+    RETURN_TYPES = _PickerNode.RETURN_TYPES + ("STRING", "STRING")
+    RETURN_NAMES = _PickerNode.RETURN_NAMES + ("footwear_en", "footwear_zh")
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -158,6 +161,8 @@ class CharSheetCostume(_PickerNode):
             prompts.with_footwear(prompt_en, include_footwear, "en"),
             prompts.with_footwear(prompt_zh, include_footwear, "zh"),
             item_id,
+            prompts.with_footwear("", include_footwear, "en"),
+            prompts.with_footwear("", include_footwear, "zh"),
         )
 
 

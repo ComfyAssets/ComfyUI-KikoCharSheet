@@ -158,9 +158,7 @@
         {
           "name": "prompt_en",
           "type": "STRING",
-          "links": [
-            16
-          ],
+          "links": [],
           "slot_index": 1
         },
         {
@@ -174,6 +172,20 @@
           "type": "STRING",
           "links": [],
           "slot_index": 3
+        },
+        {
+          "name": "footwear_en",
+          "type": "STRING",
+          "links": [
+            16
+          ],
+          "slot_index": 4
+        },
+        {
+          "name": "footwear_zh",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 5
         }
       ],
       "properties": {
@@ -347,7 +359,7 @@
         "Node name for S&R": "StringConcatenate"
       },
       "widgets_values": [
-        "<Picture 1> is the character. <Picture 2> is the outfit. <Picture 3> is the pose. Draw the character from <Picture 1> in the pose and camera angle of <Picture 3>; the mannequin is only a pose guide, not an appearance reference. Dress the character in the complete outfit from <Picture 2>, copying every garment, colour and material exactly from that picture. Photorealistic studio photograph, real person, natural skin texture, soft even lighting. Full body from head to toe, plain light grey studio background. The outfit's garments, with colours taken from <Picture 2>: ",
+        "<Picture 1> is the character. <Picture 2> is the outfit. <Picture 3> is the pose. Draw the character from <Picture 1> in the pose and camera angle of <Picture 3>; the mannequin is only a pose guide, not an appearance reference. Dress the character in the complete outfit from <Picture 2>, copying every garment, colour and material exactly from that picture. Photorealistic studio photograph, real person, natural skin texture, soft even lighting. Full body from head to toe, plain light grey studio background. ",
         "",
         ""
       ]
@@ -1031,7 +1043,7 @@
     [
       16,
       2,
-      1,
+      4,
       14,
       0,
       "STRING"

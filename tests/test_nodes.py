@@ -104,7 +104,7 @@ class PickerNodeTests(NodeTestCase):
 
     def test_costume_view_and_defaults(self):
         node = nodes.CharSheetCostume()
-        image, en, zh, item_id = node.run('{"id": "shisei-C001", "view": "back"}', "pad to size", 50, 60)
+        image, en, zh, item_id, *_ = node.run('{"id": "shisei-C001", "view": "back"}', "pad to size", 50, 60)
         self.assertEqual(tuple(image.shape), (1, 60, 50, 3))
         self.assertEqual(item_id, "shisei-C001")
         self.assertEqual(node.run("", "original", 10, 10)[3], "SPR-0001")
@@ -113,10 +113,16 @@ class PickerNodeTests(NodeTestCase):
         node = nodes.CharSheetCostume()
         self.assertTrue(nodes.CharSheetCostume.INPUT_TYPES()["optional"]["include_footwear"][1]["default"])
         self.assertNotIn("optional", nodes.CharSheetPortrait.INPUT_TYPES())
-        _, en, zh, _ = node.run("", "original", 10, 10)
+        self.assertEqual(nodes.CharSheetCostume.RETURN_NAMES[:4], nodes.CharSheetPortrait.RETURN_NAMES)
+        self.assertEqual(nodes.CharSheetCostume.RETURN_NAMES[4:], ("footwear_en", "footwear_zh"))
+        self.assertEqual(node.run("", "original", 10, 10)[4:],
+                         ("Include the footwear shown in the outfit picture, worn on both feet", "包含服装图中的鞋子，双脚都要穿上"))
+        self.assertEqual(node.run("", "original", 10, 10, include_footwear=False)[4:],
+                         ("Leave out the footwear, the person wears no shoes", "不要鞋子，人物不穿鞋"))
+        _, en, zh, _ = node.run("", "original", 10, 10)[:4]
         self.assertTrue(en.lower().endswith("include the footwear shown in the outfit picture, worn on both feet"))
         self.assertTrue(zh.endswith("包含服装图中的鞋子，双脚都要穿上"))
-        _, en, zh, _ = node.run("", "original", 10, 10, include_footwear=False)
+        _, en, zh, _ = node.run("", "original", 10, 10, include_footwear=False)[:4]
         self.assertTrue(en.lower().endswith("leave out the footwear, the person wears no shoes"))
         self.assertTrue(zh.endswith("不要鞋子，人物不穿鞋"))
 
