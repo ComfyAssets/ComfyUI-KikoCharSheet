@@ -203,6 +203,83 @@ test("manual size snaps to 32 and clamps on change and blur; the readout follows
   s.panel.destroy();
 });
 
+test("switching to Manual clamps a seeded Auto size that is over the limit", async () => {
+  const s = setup({}, (body) => okResponse(body, { width: 2048, height: 13000 }));
+  mock.timers.tick(300);
+  await flush();
+  s.panel.root.find((e) => e.tagName === "BUTTON" && e.textContent === "sheet.sizeManual").dispatch("click");
+  assert.equal(s.changes.at(-1).height, 8192);
+  assert.equal(s.changes.at(-1).width, 2048);
+  s.panel.destroy();
+});
+
+test("button groups are not wrapped in a <label>; they are named groups", () => {
+  const s = setup();
+  const segment = s.panel.root.byClass("cs-sheet-segment");
+  const wrapper = s.panel.root.find((e) => e.children.includes(segment));
+  assert.notEqual(wrapper.tagName, "LABEL");
+  assert.equal(wrapper.getAttribute("role"), "group");
+  const labelId = wrapper.getAttribute("aria-labelledby");
+  assert.ok(labelId);
+  const label = s.panel.root.find((e) => e.getAttribute("id") === labelId);
+  assert.equal(label.textContent, "sheet.outputSize");
+  const labelsBtn = s.panel.root.find((e) => e.tagName === "BUTTON" && e.textContent === "sheet.labels");
+  assert.notEqual(s.panel.root.find((e) => e.children.includes(labelsBtn)).tagName, "LABEL");
+  // Ids are unique per panel.
+  const other = setup();
+  const otherWrapper = other.panel.root.find((e) => e.children.includes(other.panel.root.byClass("cs-sheet-segment")));
+  assert.notEqual(otherWrapper.getAttribute("aria-labelledby"), labelId);
+  s.panel.destroy();
+  other.panel.destroy();
+});
+
+test("emptying the selection during a request clears the loading state", async () => {
+  const pending = [];
+  const s = setup({}, (body) => new Promise((resolve) => pending.push({ body, resolve })));
+  mock.timers.tick(300);
+  await flush();
+  const preview = s.panel.root.byClass("cs-sheet-preview");
+  assert.equal(preview.classes.has("cs-loading"), true);
+  s.poseWidget.value = JSON.stringify({ ids: [], flip: [], use_depth: false });
+  s.panel.tick();
+  mock.timers.tick(300);
+  await flush();
+  assert.equal(preview.classes.has("cs-loading"), false);
+  pending[0].resolve(await okResponse(pending[0].body));
+  await flush();
+  assert.equal(preview.classes.has("cs-loading"), false);
+  assert.equal(s.img.hidden, true);
+  assert.equal(s.status.textContent, "sheet.noPoses");
+  s.panel.destroy();
+});
+
+test("a new request clears the previous inline error", async () => {
+  let mode = "ok";
+  const pending = [];
+  const s = setup({}, (body) => {
+    if (mode === "fail") return Promise.resolve({ ok: false, status: 400, json: async () => ({ error: "bad" }) });
+    if (mode === "hold") return new Promise((resolve) => pending.push({ body, resolve }));
+    return okResponse(body);
+  });
+  mock.timers.tick(300);
+  await flush();
+  mode = "fail";
+  s.poseWidget.value = JSON.stringify({ ids: ["zz"], flip: [], use_depth: false });
+  s.panel.tick();
+  mock.timers.tick(300);
+  await flush();
+  assert.equal(s.status.classes.has("cs-error-text"), true);
+  mode = "hold";
+  s.poseWidget.value = JSON.stringify({ ids: ["a"], flip: [], use_depth: false });
+  s.panel.tick();
+  mock.timers.tick(300);
+  await flush();
+  assert.equal(pending.length, 1);
+  assert.equal(s.status.classes.has("cs-error-text"), false);
+  assert.doesNotMatch(s.status.textContent, /previewError/);
+  s.panel.destroy();
+});
+
 test("in Auto mode the size fields are read-only and ignore edits", async () => {
   const s = setup();
   mock.timers.tick(300);

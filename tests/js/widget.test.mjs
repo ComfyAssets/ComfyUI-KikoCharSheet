@@ -125,6 +125,15 @@ test("a throwing watcher does not break the original callback", () => {
   watchCallback(w, () => {
     throw new Error("boom");
   });
-  assert.doesNotThrow(() => w.callback("k"));
+  const warnings = [];
+  const realWarn = console.warn;
+  console.warn = (...args) => warnings.push(args);
+  try {
+    assert.doesNotThrow(() => w.callback("k"));
+  } finally {
+    console.warn = realWarn;
+  }
   assert.deepEqual(seen, ["k"]);
+  assert.equal(warnings.length, 1);
+  assert.match(String(warnings[0][1]), /boom/);
 });

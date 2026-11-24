@@ -35,8 +35,10 @@ function readObject(raw) {
 }
 
 const isColumns = (v) => v === "auto" || (Number.isInteger(v) && v >= 1 && v <= MAX_COLUMNS);
-const isSide = (v) => Number.isInteger(v) && v >= MIN_SIDE && v <= MAX_SIDE && v % STEP === 0;
+// Python accepts any whole number in range and plan_layout snaps it to 32; do the same here.
+const isSide = (v) => Number.isInteger(v) && v >= MIN_SIDE && v <= MAX_SIDE;
 const pick = (value, valid, fallback) => (valid(value) ? value : fallback);
+const side = (value, fallback) => (isSide(value) ? snapDimension(value, fallback) : fallback);
 
 /** Read the sheet `state_json` (string or object); unusable fields fall back to their defaults. */
 export function parseSheetState(raw) {
@@ -46,8 +48,8 @@ export function parseSheetState(raw) {
     columns: pick(data.columns, isColumns, d.columns),
     panel_aspect: pick(data.panel_aspect, (v) => PANEL_ASPECTS.includes(v), d.panel_aspect),
     size_mode: pick(data.size_mode, (v) => SIZE_MODES.includes(v), d.size_mode),
-    width: pick(data.width, isSide, d.width),
-    height: pick(data.height, isSide, d.height),
+    width: side(data.width, d.width),
+    height: side(data.height, d.height),
     labels: pick(data.labels, (v) => typeof v === "boolean", d.labels),
     background: pick(data.background, (v) => BACKGROUNDS.includes(v), d.background),
   };
@@ -73,12 +75,21 @@ export function parseColumns(value) {
   return Number.isInteger(n) && isColumns(n) ? n : "auto";
 }
 
-/** A typed width/height: nearest multiple of 32, clamped to MIN_SIDE..MAX_SIDE; unreadable → fallback. */
+/** Python's round(): halves go to the even neighbour, so we snap exactly as charsheet/sheet.py does. */
+function roundHalfEven(x) {
+  const floor = Math.floor(x);
+  const diff = x - floor;
+  if (diff > 0.5) return floor + 1;
+  if (diff < 0.5) return floor;
+  return floor % 2 === 0 ? floor : floor + 1;
+}
+
+/** A width/height: nearest multiple of 32 (as sheet.py `_round_step`), clamped to MIN_SIDE..MAX_SIDE; unreadable → fallback. */
 export function snapDimension(value, fallback) {
   const text = typeof value === "string" ? value.trim() : value;
   const n = typeof text === "number" ? text : text === "" ? NaN : Number(text);
   if (!Number.isFinite(n)) return fallback;
-  const snapped = Math.round(n / STEP) * STEP;
+  const snapped = roundHalfEven(n / STEP) * STEP;
   return Math.min(MAX_SIDE, Math.max(MIN_SIDE, snapped));
 }
 

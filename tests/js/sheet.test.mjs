@@ -60,7 +60,7 @@ test("invalid fields fall back to their defaults one by one", () => {
     columns: 8,
     panel_aspect: "3:4",
     size_mode: "fixed",
-    width: 100, // not a multiple of 32
+    width: 63, // below MIN_SIDE
     height: 9000,
     labels: "yes",
     background: "black",
@@ -73,6 +73,16 @@ test("invalid fields fall back to their defaults one by one", () => {
   assert.equal(parseSheetState({ width: true }).width, 2048);
   assert.equal(parseSheetState({ width: 64, height: 8192 }).width, 64);
   assert.equal(parseSheetState({ width: 64, height: 8192 }).height, 8192);
+});
+
+test("any whole width/height in 64..8192 is accepted and snapped to 32, like plan_layout", () => {
+  assert.equal(parseSheetState({ width: 1000 }).width, 992);
+  assert.equal(parseSheetState({ height: 100 }).height, 96);
+  assert.equal(parseSheetState({ width: 1040 }).width, 1024); // Python round(): halves go to even
+  assert.equal(parseSheetState({ width: 8192, height: 64 }).width, 8192);
+  assert.equal(parseSheetState({ width: 8193 }).width, 2048); // out of range: default, as Python rejects it
+  assert.equal(parseSheetState({ width: 1000.5 }).width, 2048); // not a whole number
+  assert.equal(parseSheetState({ width: "1024" }).width, 2048);
 });
 
 test("parsing does not mutate its input", () => {
@@ -100,7 +110,10 @@ test("parseColumns reads the select value", () => {
 
 test("snapDimension rounds to 32 and clamps to the allowed range", () => {
   assert.equal(snapDimension("1000", 2048), 992);
-  assert.equal(snapDimension(1008, 2048), 1024); // halfway rounds up
+  assert.equal(snapDimension(1008, 2048), 1024); // 31.5 steps: halves go to even, as Python round()
+  assert.equal(snapDimension(1040, 2048), 1024); // 32.5 steps
+  assert.equal(snapDimension(1072, 2048), 1088); // 33.5 steps
+  assert.equal(snapDimension(13000, 2048), 8192);
   assert.equal(snapDimension("1024", 2048), 1024);
   assert.equal(snapDimension("10", 2048), 64);
   assert.equal(snapDimension("-500", 2048), 64);

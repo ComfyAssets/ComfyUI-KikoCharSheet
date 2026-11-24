@@ -27,8 +27,20 @@ const BACKGROUND_LABELS = { white: "sheet.white", lightgray: "sheet.lightGray" }
 
 const stateWidgetOf = (node) => node?.widgets?.find((w) => w.name === "state_json") ?? null;
 
+let fieldIds = 0;
+
+/** A labelled form control (select, input): the <label> wraps it, so clicking the text focuses it. */
 function field(label, control) {
   return el("label", { class: "cs-sheet-field" }, [el("span", { class: "cs-sheet-label", text: label }), control]);
+}
+
+/** Buttons can't sit in a <label> (clicking the text would press the first one): a named group instead. */
+function group(label, control) {
+  const id = `cs-sheet-group-${++fieldIds}`;
+  return el("div", { class: "cs-sheet-field", role: "group", "aria-labelledby": id }, [
+    el("span", { class: "cs-sheet-label", id, text: label }),
+    control,
+  ]);
 }
 
 function select(options, onChange) {
@@ -92,10 +104,13 @@ export function createSheetPanel({ node, state, onChange, translate, api }) {
   manualBtn.addEventListener("click", () => {
     if (current.size_mode === "manual") return;
     // Start Manual from the size Auto produced, so switching alone changes nothing.
-    const seed = plan ? { width: plan.width, height: plan.height } : {};
+    // Auto may exceed MAX_SIDE (e.g. 13 poses in one column), so clamp what we seed.
+    const seed = plan
+      ? { width: snapDimension(plan.width, current.width), height: snapDimension(plan.height, current.height) }
+      : {};
     commit({ ...current, ...seed, size_mode: "manual" });
   });
-  const sizeToggle = el("div", { class: "cs-sheet-segment", role: "group" }, [autoBtn, manualBtn]);
+  const sizeToggle = el("div", { class: "cs-sheet-segment" }, [autoBtn, manualBtn]);
 
   const commitSize = (key) => (input) => {
     if (current.size_mode !== "manual") return;
@@ -111,11 +126,15 @@ export function createSheetPanel({ node, state, onChange, translate, api }) {
   const settings = el("div", { class: "cs-filters cs-sheet-settings" }, [
     field(t("sheet.columns"), columnsSelect),
     field(t("sheet.panelAspect"), aspectSelect),
-    field(t("sheet.outputSize"), sizeToggle),
+    group(t("sheet.outputSize"), sizeToggle),
     field(t("sheet.width"), widthInput),
     field(t("sheet.height"), heightInput),
     field(t("sheet.background"), backgroundSelect),
-    field(" ", labelsBtn),
+    // The button names itself; the empty caption only keeps it aligned with the other fields.
+    el("div", { class: "cs-sheet-field" }, [
+      el("span", { class: "cs-sheet-label", "aria-hidden": "true", text: "\u00a0" }),
+      labelsBtn,
+    ]),
   ]);
 
   const warnings = el("div", { class: "cs-warning-text cs-sheet-warnings", hidden: true });
@@ -209,6 +228,7 @@ export function createSheetPanel({ node, state, onChange, translate, api }) {
     note.textContent = note.hidden ? "" : t("sheet.lastRunPreview");
     if (!body) {
       gate.cancel(); // drop any response still in flight
+      preview.classList.remove("cs-loading");
       lastKey = null;
       plan = null;
       renderSize();
@@ -220,7 +240,8 @@ export function createSheetPanel({ node, state, onChange, translate, api }) {
     lastKey = key;
     const token = gate.next();
     preview.classList.add("cs-loading");
-    if (image.hidden) showStatus(t("sheet.previewLoading"));
+    // Replace any earlier inline error: a loading text without an image, else nothing.
+    showStatus(image.hidden ? t("sheet.previewLoading") : "", { keepImage: true });
     try {
       const resp = await api.fetchApi(PREVIEW_ROUTE, {
         method: "POST",
