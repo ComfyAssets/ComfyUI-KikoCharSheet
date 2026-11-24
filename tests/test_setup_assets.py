@@ -62,7 +62,27 @@ class SetupAssetsTests(unittest.TestCase):
     def test_missing_source(self):
         with self.assertRaises(setup_assets.SourceMissingError) as cm:
             setup_assets.setup(self.tmp / "nope", self.dest, force=False)
-        self.assertIn("download.py", str(cm.exception))
+        self.assertIn("images come with the clone", str(cm.exception))
+        self.assertNotIn("download.py", str(cm.exception))
+
+    def test_original_size_downloads_are_left_out(self):
+        # What scripts/download.py adds to a fork clone: full-size files next to the WebP copies.
+        kept = ["img/costume/a.webp", "img/portrait/p.webp", "img/depth/d.webp", "thumbs/depth/d.webp",
+                "img/costumes/shisei/c.png", "thumbs/costume/t.jpg"]
+        left_out = ["img/costume/a.png", "img/portrait/p.PNG", "img/depth/d.png", "thumbs/depth/d.jpg"]
+        for rel in kept + left_out:
+            path = self.src / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"x")
+        res = setup_assets.setup(self.src, self.dest, force=False)
+        for rel in kept + ["img/a.png", "thumbs/a.png"]:
+            self.assertTrue((self.dest / rel).is_file(), rel)
+        for rel in left_out:
+            self.assertFalse((self.dest / rel).exists(), rel)
+        self.assertEqual(res["skipped_originals"], 4)
+
+    def test_plain_clone_reports_nothing_left_out(self):
+        self.assertEqual(setup_assets.setup(self.src, self.dest, force=False)["skipped_originals"], 0)
 
     def test_cli_missing_source_exit_2(self):
         code = setup_assets.main(["--from", str(self.tmp / "nope"), "--dest", str(self.dest)])

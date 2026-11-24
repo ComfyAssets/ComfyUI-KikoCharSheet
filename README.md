@@ -36,11 +36,13 @@ A portrait upload that is not already 4:5 shows a crop frame over the preview. D
 ## Install
 
 1. Put this folder in `ComfyUI/custom_nodes/` (a clone or a symlink).
-2. Copy the gallery images and data into `assets/`. You need a clone of the ai-pose-gallery fork with its images downloaded (see its README, `scripts/download.py`):
+2. Copy the gallery images and data into `assets/`. You need a clone of the ai-pose-gallery fork; the images come with the clone, so there is nothing else to download:
 
    ```
    python3 scripts/setup_assets.py --from /path/to/ai-pose-gallery-en
    ```
+
+   On Windows, run it with the Python that runs your ComfyUI: `python scripts\setup_assets.py --from C:\path\to\ai-pose-gallery-en`.
 
    This copies about 1.2 GB. Use `--force` to replace an existing `assets/`. Without `assets/`, the nodes raise an error that names this script.
 3. Restart ComfyUI.

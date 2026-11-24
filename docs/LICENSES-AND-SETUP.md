@@ -29,11 +29,20 @@ Only addresses listed exactly in the catalogue are fetched, with size and time l
 
 ## Setup
 
+Linux and macOS:
+
 ```
 python3 scripts/setup_assets.py --from /path/to/ai-pose-gallery-en [--force]
 ```
 
-- The source must contain `data/`, `img/` and `thumbs/`. If it does not, the script stops and says which are missing. Download the images in the fork first with `scripts/download.py`.
+Windows (from the pack's folder; use the Python that runs your ComfyUI, for example `python_embeded\python.exe` of the portable build):
+
+```
+python scripts\setup_assets.py --from C:\path\to\ai-pose-gallery-en [--force]
+```
+
+- The source must contain `data/`, `img/` and `thumbs/`. If it does not, the script stops and says which are missing. A clone of the fork has all three, with the images the nodes use (about 1.2 GB). You do not need to run the fork's `scripts/download.py`.
+- That download script fetches the original-size files (about 6 GB more) that the fork keeps out of git. If you have run it, the setup script leaves those files out and says how many.
 - The script always copies. There is no symlink option. The copy is about 1.2 GB.
 - It also copies the English data names to `assets/locales/en/data.json`, if the fork has them.
 - Existing assets are not overwritten unless you pass `--force`.
