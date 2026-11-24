@@ -97,10 +97,15 @@
     "white": "White",
     "lightGray": "Light gray",
     "megapixels": "{{value}} MP",
-    "readout": "{{width}}×{{height}} px · {{megapixels}} MP",
+    "readout": "{{width}} × {{height}} · {{megapixels}} MP",
     "pictureOrderHint": "1 Character · 2 Layout · 3 Outfit → connect to MiniMax H3 Image Conditioning image_1…image_3",
     "previewAfterRun": "Preview appears after the node runs.",
-    "noPoses": "No poses selected. Connect a Pose Picker."
+    "noPoses": "No poses selected. Connect a Pose Picker.",
+    "readoutAuto": "Auto · about 4 MP",
+    "previewTitle": "Layout preview",
+    "previewLoading": "Drawing the layout preview…",
+    "previewError": "Preview failed: {{message}}",
+    "lastRunPreview": "The selection comes through a reroute or subgraph, so this preview uses the last run's poses."
   },
   "uploads": {
     "tile": "+ Upload",

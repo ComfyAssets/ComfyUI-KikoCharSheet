@@ -97,10 +97,15 @@
     "white": "白色",
     "lightGray": "浅灰",
     "megapixels": "{{value}} MP",
-    "readout": "{{width}}×{{height}} px · {{megapixels}} MP",
+    "readout": "{{width}} × {{height}} · {{megapixels}} MP",
     "pictureOrderHint": "1 角色 · 2 布局 · 3 服装 → 连接到 MiniMax H3 Image Conditioning 的 image_1…image_3",
     "previewAfterRun": "节点运行后显示预览。",
-    "noPoses": "未选择姿势。请连接姿势选择器。"
+    "noPoses": "未选择姿势。请连接姿势选择器。",
+    "readoutAuto": "自动 · 约 4 MP",
+    "previewTitle": "布局预览",
+    "previewLoading": "正在绘制布局预览…",
+    "previewError": "预览失败：{{message}}",
+    "lastRunPreview": "姿势经由转接点或子图传入，此预览使用上次运行的姿势。"
   },
   "uploads": {
     "tile": "+ 上传",

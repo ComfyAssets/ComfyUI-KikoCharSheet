@@ -23,3 +23,33 @@ export function setValueOnce(widget, value) {
   }
   if (!fired) original?.call(widget, value);
 }
+
+/**
+ * Also call `watcher(value)` whenever the widget's callback runs (after the original, which keeps
+ * its `this` and return value). Returns `unwatch`: it puts the original back when our wrapper is
+ * still installed; when someone wrapped it later, it only silences the watcher so their chain holds.
+ */
+export function watchCallback(widget, watcher) {
+  const ownCallback = Object.prototype.hasOwnProperty.call(widget, "callback");
+  const original = widget.callback;
+  let active = true;
+  const wrapper = function (...args) {
+    const result = original?.apply(this, args);
+    if (active) {
+      try {
+        watcher(...args);
+      } catch (err) {
+        console.warn("[CharSheet] widget watcher failed:", err);
+      }
+    }
+    return result;
+  };
+  widget.callback = wrapper;
+  return () => {
+    if (!active) return;
+    active = false;
+    if (widget.callback !== wrapper) return;
+    if (ownCallback) widget.callback = original;
+    else delete widget.callback;
+  };
+}

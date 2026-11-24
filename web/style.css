@@ -426,3 +426,51 @@
 
 /* Uploads stay compact so the gallery keeps most of the scroll area. */
 .cs-upload-row { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+
+/* ---- Pose Sheet Designer ---- */
+.cs-panel.cs-sheet-panel { --comfy-widget-min-height: 560px; min-height: 560px; }
+.cs-sheet-readout { margin-left: auto; }
+.cs-sheet-settings { align-items: flex-end; gap: 8px 10px; }
+.cs-sheet-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cs-sheet-label { color: var(--cs-muted); font-size: 12px; white-space: nowrap; }
+.cs-sheet-field .cs-select { flex: none; width: 104px; }
+.cs-sheet-size { width: 92px; font-variant-numeric: tabular-nums; }
+.cs-sheet-size.cs-readonly { background: var(--cs-inset); color: var(--cs-muted); border-style: dashed; }
+.cs-sheet-segment { display: flex; }
+.cs-sheet-segment .cs-btn:first-child { border-radius: 6px 0 0 6px; }
+.cs-sheet-segment .cs-btn:last-child { border-radius: 0 6px 6px 0; margin-left: -1px; }
+.cs-sheet-warnings { margin-top: 0; font-size: 13px; flex-shrink: 0; }
+.cs-sheet-preview {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 220px;
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+  padding: 10px;
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius);
+  background: var(--cs-inset);
+  overflow: hidden;
+}
+.cs-sheet-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 0.15s;
+}
+/* Grid placement keeps the status text over the image, so an error shows under the last good preview. */
+.cs-sheet-image, .cs-sheet-status { grid-area: 1 / 1; }
+.cs-sheet-preview:not(.cs-sheet-empty) .cs-sheet-status {
+  align-self: end;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #101a23e6;
+}
+.cs-sheet-status { margin: 0; color: var(--cs-muted); text-align: center; max-width: 90%; }
+.cs-sheet-preview.cs-loading .cs-sheet-image { opacity: 0.55; }
+.cs-sheet-note, .cs-sheet-hint { margin: 0; font-size: 12px; color: var(--cs-muted); flex-shrink: 0; }
+.cs-sheet-hint { padding: 6px 8px; border: 1px dashed var(--cs-border); border-radius: 6px; color: var(--cs-text); }
+@media (prefers-reduced-motion: reduce) {
+  .cs-sheet-image { transition: none; }
+}

@@ -1,5 +1,4 @@
-// ComfyUI extension entry: mounts the in-node picker panels.
-// The Pose Sheet Designer panel (CharSheetPoseSheet) is added separately.
+// ComfyUI extension entry: mounts the in-node picker panels and the Pose Sheet Designer panel.
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 import { getTranslator, installPanel, syncInstalled } from "./mount.js";
