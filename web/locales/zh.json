@@ -1,0 +1,150 @@
+{
+  "counter": "已选 {{count}} / {{max}}",
+  "panel": {
+    "portrait": "人像选择器",
+    "costume": "服装选择器",
+    "pose": "姿势选择器",
+    "sheet": "姿势表设计器",
+    "expand": "展开全屏",
+    "collapse": "退出全屏",
+    "close": "关闭"
+  },
+  "search": {
+    "portrait": "搜索标题、发型或编号 (如: 双马尾 / f71f980dde3)...",
+    "costume": "搜索服装、分类或编号 (如: 水手服 / SPR-0001)...",
+    "pose": "搜索标题、动作或编号 (如: 坐姿 / SPR-0001)..."
+  },
+  "filters": {
+    "portrait": {
+      "hair": "发长",
+      "hairAll": "全部发长",
+      "section": "分区",
+      "sectionAll": "全部分区"
+    },
+    "costume": {
+      "group": "现实 / 二次元",
+      "groupAll": "全部 · 现实 / 二次元",
+      "category": "服装分类",
+      "categoryAll": "全部服装分类",
+      "source": "来源",
+      "sourceAll": "全部来源"
+    },
+    "pose": {
+      "system": "动作分类",
+      "systemAll": "全部动作分类",
+      "angle": "视角",
+      "angleAll": "全部视角"
+    }
+  },
+  "source": {
+    "gia": "ギア · 写实",
+    "giaAnime": "ギア · 动漫",
+    "charadb": "CharaDB",
+    "shisei": "Shisei · 中国历代"
+  },
+  "sfw": {
+    "on": "🛡️ 安全模式 (SFW)",
+    "off": "🔞 18+ 完整模式",
+    "confirm": "是否关闭安全模式并显示 18+ 敏感参考分类（性感姿势、双人缠绵、内衣穿搭）？请确认您已年满 18 周岁。",
+    "confirmYes": "我已年满 18 周岁，关闭",
+    "confirmNo": "保持安全模式"
+  },
+  "depth": {
+    "on": "🌗 深度图 (Depth)",
+    "off": "🗿 素体白模"
+  },
+  "random": "🎲 随机抽一张",
+  "reset": "重置筛选",
+  "state": {
+    "empty": "没有匹配的内容。",
+    "loading": "正在加载 {{label}}...",
+    "loadError": "加载{{lib}}图库失败: {{error}}",
+    "retry": "重试",
+    "online": "需要联网",
+    "onlineHint": "这张图片从来源网站加载，需要联网。",
+    "itemCount": "{{count}} 项",
+    "current": "当前选择",
+    "noneSelected": "尚未选择。",
+    "limit": "已达上限：最多 {{max}} 个姿势。"
+  },
+  "tray": {
+    "title": "已选姿势",
+    "remove": "移除",
+    "flip": "翻转（镜像）",
+    "flipped": "已镜像",
+    "drag": "拖动以调整顺序",
+    "empty": "点击姿势即可添加到这里。"
+  },
+  "view": {
+    "label": "服装视角",
+    "front": "正面",
+    "back": "背面",
+    "side": "侧面"
+  },
+  "sheet": {
+    "columns": "列数",
+    "auto": "自动",
+    "panelAspect": "格子比例",
+    "outputSize": "输出尺寸",
+    "sizeAuto": "自动",
+    "sizeManual": "手动",
+    "width": "宽度",
+    "height": "高度",
+    "labels": "标签",
+    "background": "背景",
+    "white": "白色",
+    "lightGray": "浅灰",
+    "megapixels": "{{value}} MP",
+    "readout": "{{width}}×{{height}} px · {{megapixels}} MP",
+    "pictureOrderHint": "1 角色 · 2 布局 · 3 服装 → 连接到 MiniMax H3 Image Conditioning 的 image_1…image_3",
+    "previewAfterRun": "节点运行后显示预览。",
+    "noPoses": "未选择姿势。请连接姿势选择器。"
+  },
+  "uploads": {
+    "tile": "+ 上传",
+    "tileHint": "使用你自己的图片",
+    "title": "我的上传",
+    "empty": "还没有上传过图片。上传的图片只保存在 ComfyUI 的 input 文件夹中。",
+    "listError": "加载我的上传失败: {{error}}",
+    "guideTitle": {
+      "portrait": "上传你自己的头像照",
+      "costume": "上传服装图片",
+      "pose": "上传姿势图片"
+    },
+    "sizeLabel": "尺寸",
+    "size": "4:5 竖版，宽度至少 1024 px（理想尺寸 1600×2000）。其他比例也能用：选择器节点会把每张参考图居中裁剪到输出尺寸（默认 1024×1280，即 4:5）。",
+    "tipsLabel": "拍摄建议",
+    "tips": {
+      "camera": "正面看向镜头。",
+      "framing": "取景到头部和肩膀。",
+      "light": "光线柔和均匀，从正面照亮。",
+      "background": "纯色、浅色的背景。",
+      "expression": "表情自然或微微一笑。",
+      "accessories": "不戴墨镜和帽子。",
+      "hair": "发型保持你希望呈现的样子。"
+    },
+    "promptLabel": "已经有照片了？可以用任意图像编辑模型把它转成图库风格的头像照：",
+    "prompt": "把这张照片转成同一个人的正面影棚头像照：脸部、发型和肤色完全保持不变；肩部以上；柔和均匀的光线；纯浅灰色背景；4:5 竖版。",
+    "copy": "复制提示词",
+    "copied": "已复制",
+    "copyFailed": "当前环境无法自动复制，请选中提示词手动复制。",
+    "costumeGuide": "完整的整套服装，正面视角，纯色背景。",
+    "poseGuide": "单人全身，轮廓清晰。",
+    "choose": "选择文件…",
+    "badType": "仅支持 PNG、JPG 和 WebP 图片。",
+    "badName": "文件名不符合要求：不能以 . 开头，不能包含 .. / \\ 或控制字符，且不超过 200 个字符。请改名后重试。",
+    "badStoredName": "ComfyUI 保存后的文件名“{{name}}”不符合要求（不能以 . 开头，不能包含 .. 或控制字符，且不超过 200 个字符）。请把文件改短后重新上传。",
+    "frameNote": "4:5 框仅作参考。图片会按原样保存，选择器节点会把它居中裁剪到输出尺寸。",
+    "sizeWarning": "这张图片宽 {{width}} px，建议至少 1024 px。",
+    "dimensions": "{{width}}×{{height}} px",
+    "use": "使用这张图",
+    "cancel": "取消",
+    "uploading": "正在上传…",
+    "uploadError": "上传失败: {{error}}",
+    "deleteAria": "删除这张上传图片",
+    "deleteConfirm": "删除这张上传图片？",
+    "delete": "删除",
+    "deleteError": "删除失败: {{error}}",
+    "notFound": "未找到"
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "counter": "{{count}} / {{max}} selected",
+  "panel": {
+    "portrait": "Portrait Picker",
+    "costume": "Costume Picker",
+    "pose": "Pose Picker",
+    "sheet": "Pose Sheet Designer",
+    "expand": "Expand to full screen",
+    "collapse": "Exit full screen",
+    "close": "Close"
+  },
+  "search": {
+    "portrait": "Search title, hairstyle or ID (e.g. twin tails / f71f980dde3)...",
+    "costume": "Search outfit, category or ID (e.g. sailor uniform / SPR-0001)...",
+    "pose": "Search title, pose or ID (e.g. sitting / SPR-0001)..."
+  },
+  "filters": {
+    "portrait": {
+      "hair": "Hair length",
+      "hairAll": "All hair lengths",
+      "section": "Section",
+      "sectionAll": "All sections"
+    },
+    "costume": {
+      "group": "Realism",
+      "groupAll": "All · Realistic / Anime",
+      "category": "Costume category",
+      "categoryAll": "All costume categories",
+      "source": "Source",
+      "sourceAll": "All sources"
+    },
+    "pose": {
+      "system": "Pose category",
+      "systemAll": "All pose categories",
+      "angle": "Angle",
+      "angleAll": "All angles"
+    }
+  },
+  "source": {
+    "gia": "ギア · Realistic",
+    "giaAnime": "ギア · Anime",
+    "charadb": "CharaDB",
+    "shisei": "Shisei · Chinese dynasties"
+  },
+  "sfw": {
+    "on": "🛡️ Safe mode (SFW)",
+    "off": "🔞 18+ full mode",
+    "confirm": "Turn off safe mode and show 18+ sensitive reference categories (sexy poses, couple embraces, lingerie outfits)? Please confirm you are at least 18 years old.",
+    "confirmYes": "I am 18 or older, turn it off",
+    "confirmNo": "Keep safe mode on"
+  },
+  "depth": {
+    "on": "🌗 Depth map",
+    "off": "🗿 Mannequin"
+  },
+  "random": "🎲 Random pick",
+  "reset": "Reset filters",
+  "state": {
+    "empty": "No matching items.",
+    "loading": "Loading {{label}}...",
+    "loadError": "Failed to load the {{lib}} library: {{error}}",
+    "retry": "Retry",
+    "online": "Needs internet",
+    "onlineHint": "This image is loaded from its origin site and needs an internet connection.",
+    "itemCount": "{{count}} items",
+    "current": "Current pick",
+    "noneSelected": "Nothing selected yet.",
+    "limit": "Limit reached: at most {{max}} poses."
+  },
+  "tray": {
+    "title": "Selected poses",
+    "remove": "Remove",
+    "flip": "Flip (mirror)",
+    "flipped": "Mirrored",
+    "drag": "Drag to reorder",
+    "empty": "Click poses to add them here."
+  },
+  "view": {
+    "label": "Costume view",
+    "front": "Front",
+    "back": "Back",
+    "side": "Side"
+  },
+  "sheet": {
+    "columns": "Columns",
+    "auto": "Auto",
+    "panelAspect": "Panel aspect",
+    "outputSize": "Output size",
+    "sizeAuto": "Auto",
+    "sizeManual": "Manual",
+    "width": "Width",
+    "height": "Height",
+    "labels": "Labels",
+    "background": "Background",
+    "white": "White",
+    "lightGray": "Light gray",
+    "megapixels": "{{value}} MP",
+    "readout": "{{width}}×{{height}} px · {{megapixels}} MP",
+    "pictureOrderHint": "1 Character · 2 Layout · 3 Outfit → connect to MiniMax H3 Image Conditioning image_1…image_3",
+    "previewAfterRun": "Preview appears after the node runs.",
+    "noPoses": "No poses selected. Connect a Pose Picker."
+  },
+  "uploads": {
+    "tile": "+ Upload",
+    "tileHint": "Use your own image",
+    "title": "My uploads",
+    "empty": "No uploads yet. They are stored only in ComfyUI's input folder.",
+    "listError": "Could not load your uploads: {{error}}",
+    "guideTitle": {
+      "portrait": "Upload your own headshot",
+      "costume": "Upload a costume image",
+      "pose": "Upload a pose image"
+    },
+    "sizeLabel": "Size",
+    "size": "4:5 portrait, at least 1024 px wide (1600×2000 is ideal). Other shapes still work: the picker node centre-crops every reference to its output size (1024×1280, i.e. 4:5, by default).",
+    "tipsLabel": "Taking the photo",
+    "tips": {
+      "camera": "Face the camera.",
+      "framing": "Head and shoulders in frame.",
+      "light": "Soft, even light in front of you.",
+      "background": "A plain, light background.",
+      "expression": "Neutral expression or a slight smile.",
+      "accessories": "No sunglasses or hat.",
+      "hair": "Hair as you want it to appear."
+    },
+    "promptLabel": "Already have a photo? Turn it into a gallery-style headshot with any image-edit model:",
+    "prompt": "Turn this photo into a front-facing studio headshot of the same person: keep the face, hairstyle and skin tone exactly; shoulders up; soft even lighting; plain light gray background; 4:5 portrait.",
+    "copy": "Copy prompt",
+    "copied": "Copied",
+    "copyFailed": "Couldn't copy automatically here. Select the prompt and copy it by hand.",
+    "costumeGuide": "The full outfit, front view, on a plain background.",
+    "poseGuide": "One full-body figure with a clear silhouette.",
+    "choose": "Choose file…",
+    "badType": "Only PNG, JPG and WebP images are supported.",
+    "badName": "This file name is not allowed: no leading dot, no \"..\", slashes or control characters, at most 200 characters. Please rename the file and try again.",
+    "badStoredName": "ComfyUI saved the file as \"{{name}}\", which is not an allowed name (no leading dot, no \"..\" or control characters, at most 200 characters). Please shorten the file name and upload again.",
+    "frameNote": "The 4:5 frame is only a guide. The image is stored uncropped; the picker node centre-crops it to the output size.",
+    "sizeWarning": "This image is {{width}} px wide. At least 1024 px is recommended.",
+    "dimensions": "{{width}}×{{height}} px",
+    "use": "Use this photo",
+    "cancel": "Cancel",
+    "uploading": "Uploading…",
+    "uploadError": "Upload failed: {{error}}",
+    "deleteAria": "Delete this upload",
+    "deleteConfirm": "Delete this upload?",
+    "delete": "Delete",
+    "deleteError": "Delete failed: {{error}}",
+    "notFound": "Not found"
+  }
+}
