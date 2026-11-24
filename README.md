@@ -19,6 +19,8 @@ All four are in the `CharSheet` category. Each picker shows a browsable panel in
 |---|---|
 | ![Pose Picker node with three poses selected and shown in order in the tray](docs/images/pose-picker.png) | ![Pose Sheet Designer node showing the layout image for three poses and the output size](docs/images/pose-sheet-designer.png) |
 
+*The screenshots on this page show gallery thumbnails for illustration only. Those images belong to their creators and are not part of this pack; see [Thanks and credits](#thanks-and-credits).*
+
 ## What this pack changes and adds
 
 The galleries and the idea of picking a portrait, a costume and a pose come from the projects credited below. This pack is a new set of nodes built around them. What is different here:
@@ -103,8 +105,6 @@ Python needs nothing beyond what ComfyUI ships. Run the Python tests with ComfyU
 
 Licences, image sources and what you may do with the images: [docs/LICENSES-AND-SETUP.md](docs/LICENSES-AND-SETUP.md).
 
-## Credits
+## Licence
 
-- Gallery data and the picker idea: [anhao/ai-pose-gallery-zh](https://github.com/anhao/ai-pose-gallery-zh).
-- Panel look and the node-UI pattern: [H3 Character Sheet Designer](https://github.com/ukr8b3g-cmyk/H3-Character-Sheet-Designer) by ukr8b3g-cmyk.
-- Code: MIT, see [LICENSE](LICENSE). The licence does not cover any image.
+The code and the English names are MIT, see [LICENSE](LICENSE). The licence does not cover any gallery image. Credits are in [Thanks and credits](#thanks-and-credits) above.
