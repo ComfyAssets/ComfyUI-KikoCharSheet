@@ -56,7 +56,7 @@ class CatalogTests(unittest.TestCase):
         for prefix in ("charadb-", "gia-anime-", "shisei-"):
             with self.assertRaises(ValueError) as cm:
                 self.cat.find("costume", prefix + "zzz")
-            self.assertEqual(str(cm.exception), "unknown external-source costume ID")
+            self.assertEqual(str(cm.exception), f"unknown external-source costume id: {prefix}zzz")
 
     def test_image_path_ok(self):
         p = self.cat.image_path("img/pose/pose-safe.png")
@@ -109,9 +109,22 @@ class CatalogTests(unittest.TestCase):
 
     def test_select_costume_view_no_views_and_upload(self):
         plain = self.cat.find("costume", "SPR-0001")
-        self.assertIs(select_costume_view(plain, "back"), plain)
+        self.assertIs(select_costume_view(plain, "front"), plain)
         up = {"id": "upload:a.png", "source": "upload", "views": [{"id": "front"}]}
         self.assertIs(select_costume_view(up, "front"), up)
+
+    def test_select_costume_view_non_front_on_single_view_costume(self):
+        plain = self.cat.find("costume", "SPR-0001")
+        for view in ("back", "side"):
+            with self.assertRaises(ValueError) as cm:
+                select_costume_view(plain, view)
+            self.assertEqual(str(cm.exception), f"costume SPR-0001 has no {view} view")
+
+    def test_select_costume_view_error_names_item(self):
+        item = self.cat.find("costume", "shisei-C001")
+        with self.assertRaises(ValueError) as cm:
+            select_costume_view(item, "side")
+        self.assertEqual(str(cm.exception), "costume shisei-C001 has no side view")
 
     def test_is_nsfw(self):
         pose = {p["id"]: p for p in self.cat.items("pose")}

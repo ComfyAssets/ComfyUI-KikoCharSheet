@@ -58,7 +58,7 @@ class Catalog:
             if item.get("id") == clean_id:
                 return item
         if clean_id.startswith(_EXTERNAL_PREFIXES):
-            raise ValueError("unknown external-source costume ID")
+            raise ValueError(f"unknown external-source costume id: {clean_id}")
         raise ValueError(f"unknown {lib} id: {clean_id}")
 
     def image_path(self, rel: str) -> Path:
@@ -77,11 +77,13 @@ def select_costume_view(item: dict, view: str = "front") -> dict:
         return item
     views = item.get("views", [])
     if not views:
+        if view != "front":
+            raise ValueError(f"costume {item.get('id')} has no {view} view")
         return item
     selected = next((v for v in views if v["id"] == view), None)
     if selected is None:
         if view != "front":
-            raise ValueError(f"costume has no such view: {view}")
+            raise ValueError(f"costume {item.get('id')} has no {view} view")
         selected = views[0]
     return dict(item, selectedView=selected["id"], **{k: selected[k] for k in _COSTUME_VIEW_KEYS})
 

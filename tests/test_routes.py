@@ -115,6 +115,10 @@ class MediaTests(RouteTestCase):
         self.assertEqual(routes.resolve_media("costume", "charadb-1", "thumb")[0], 404)
         self.assertEqual(routes.resolve_media("costume", "gia-anime-1", "image")[0], 404)
 
+    def test_single_view_costume_rejects_other_views(self):
+        self.assertEqual(routes.resolve_media("costume", "SPR-0001", "thumb", view="back")[0], 404)
+        self.assertEqual(routes.resolve_media("costume", "SPR-0001", "thumb", view="front")[0], 200)
+
     def test_costume_view(self):
         status, path = routes.resolve_media("costume", "shisei-C001", "thumb", view="back")
         self.assertEqual((status, path.name), (200, "shisei-C001-back.png"))
