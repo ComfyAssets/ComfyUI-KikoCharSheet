@@ -103,15 +103,6 @@ Python needs nothing beyond what ComfyUI ships. Run the Python tests with ComfyU
 
 Licences, image sources and what you may do with the images: [docs/LICENSES-AND-SETUP.md](docs/LICENSES-AND-SETUP.md).
 
-## Screenshots to add
-
-- Portrait Picker panel
-- Costume Picker panel with the view menu
-- Pose Picker panel with the tray
-- Full-screen view
-- Pose Sheet Designer with the layout preview
-- The pose-sheet workflow
-
 ## Credits
 
 - Gallery data and the picker idea: [anhao/ai-pose-gallery-zh](https://github.com/anhao/ai-pose-gallery-zh).
