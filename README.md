@@ -11,6 +11,14 @@ Four ComfyUI nodes that pick references for a character sheet and prepare them f
 
 All four are in the `CharSheet` category. Each picker shows a browsable panel inside the node, with search, filters, safe mode, your own uploads and a full-screen view. The panel follows the ComfyUI language (English or Chinese).
 
+| Portrait Picker | Costume Picker |
+|---|---|
+| ![Portrait Picker node with the gallery panel, an upload tile and the current pick](docs/images/portrait-picker.png) | ![Costume Picker node with filters, safe mode and the footwear switch](docs/images/costume-picker.png) |
+
+| Pose Picker | Pose Sheet Designer |
+|---|---|
+| ![Pose Picker node with three poses selected and shown in order in the tray](docs/images/pose-picker.png) | ![Pose Sheet Designer node showing the layout image for three poses and the output size](docs/images/pose-sheet-designer.png) |
+
 ## What this pack changes and adds
 
 The galleries and the idea of picking a portrait, a costume and a pose come from the projects credited below. This pack is a new set of nodes built around them. What is different here:
@@ -31,9 +39,19 @@ Some logic is adapted from the gallery project's nodes, which are MIT licensed: 
 
 ## Three ways to use poses
 
-1. **Pose sheet.** Pose Picker, then Pose Sheet Designer, then H3 Image Conditioning. The designer outputs `prompt`, `width`, `height` and `image_1` to `image_3` (character, layout, outfit). Workflow: `workflows/charsheet-minimax-h3-pose-sheet.json`.
-2. **H3 references.** Send the portrait to the H3 Character Sheet Designer as `character_image`, the costume as `reference_image_1`, and `pose_1` and `pose_2` as `reference_image_2` and `_3`. Workflow: `workflows/charsheet-h3-references.json`.
-3. **One image per pose.** The Pose Picker outputs lists (`poses`, `pose_prompts_en`). ComfyUI runs what follows once per pose. Workflow: `workflows/charsheet-one-per-pose.json`.
+1. **Pose sheet.** Pose Picker, then Pose Sheet Designer, then H3 Image Conditioning. The designer outputs `prompt`, `width`, `height` and `image_1` to `image_3` (character, layout, outfit). Workflow: `example_workflows/charsheet-minimax-h3-pose-sheet.json`.
+2. **H3 references.** Send the portrait to the H3 Character Sheet Designer as `character_image`, the costume as `reference_image_1`, and `pose_1` and `pose_2` as `reference_image_2` and `_3`. Workflow: `example_workflows/charsheet-h3-references.json`.
+3. **One image per pose.** The Pose Picker outputs lists (`poses`, `pose_prompts_en`). ComfyUI runs what follows once per pose. Workflow: `example_workflows/charsheet-one-per-pose.json`.
+
+### The full one-per-pose workflow
+
+`example_workflows/kiko-charsheet-one-per-pose-v1.json` is the complete version of the third way: pick a portrait, a costume and any number of poses, queue once, and get one image per pose.
+
+![The one-per-pose workflow: download, controls, the three pickers, prompt, models, generate and save groups](docs/images/workflow-one-per-pose.png)
+
+It adds a size picker, a seed history, a note with instructions, a model download group (off by default; turn it on for the first run) and two VRAM purge steps that unload the text encoder before the image model loads and the image model before decoding. It needs these packs as well as this one: [ComfyUI-KikoTools](https://github.com/ComfyAssets/ComfyUI-KikoTools), [KJNodes](https://github.com/kijai/ComfyUI-KJNodes) and [rgthree-comfy](https://github.com/rgthree/rgthree-comfy). The three `charsheet-*` workflows are the plain versions and need only this pack and ComfyUI's MiniMax H3 nodes.
+
+All four appear in ComfyUI under Templates once the pack is installed.
 
 The example workflows use the author's local model, text encoder and VAE file names (taken from the H3 Character Sheet example workflow). Change them to the names of your own files. They need the nodes of this pack and ComfyUI's MiniMax H3 nodes. The H3 references workflow also needs the H3 Character Sheet Designer pack.
 
