@@ -79,8 +79,9 @@
   "view": {
     "label": "服装视角",
     "front": "正面",
-    "back": "背面",
-    "side": "侧面"
+    "diag": "斜侧",
+    "side": "侧面",
+    "back": "背面"
   },
   "sheet": {
     "columns": "列数",

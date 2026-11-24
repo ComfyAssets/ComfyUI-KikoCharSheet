@@ -120,6 +120,20 @@ class MediaTests(RouteTestCase):
         self.assertEqual((status, path.name), (200, "shisei-C001-back.png"))
         self.assertEqual(routes.resolve_media("costume", "shisei-C001", "thumb", view="top")[0], 404)
 
+    def test_media_content_type(self):
+        cases = {
+            "a.webp": "image/webp",
+            "a.WEBP": "image/webp",
+            "a.png": "image/png",
+            "a.jpg": "image/jpeg",
+            "a.jpeg": "image/jpeg",
+            "a.gif": "application/octet-stream",
+            "noext": "application/octet-stream",
+        }
+        for name, expected in cases.items():
+            with self.subTest(name=name):
+                self.assertEqual(routes.media_content_type(Path("/x") / name), expected)
+
     def test_depth(self):
         self.assertEqual(routes.resolve_media("pose", "pose-safe", "thumb", depth=True)[0], 404)
         for rel in ("thumbs/depth/pose/pose-safe.webp", "img/depth/pose/pose-safe.webp"):

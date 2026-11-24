@@ -49,6 +49,12 @@ class PickStateTests(unittest.TestCase):
         self.assertEqual(nodes.parse_pick_state("", "costume"), {"id": "SPR-0001", "view": "front"})
         self.assertEqual(nodes.parse_pick_state('{"id": "x", "view": "back"}', "costume")["view"], "back")
 
+    def test_costume_views_match_the_fork(self):
+        self.assertEqual(nodes.COSTUME_VIEWS, ("front", "diag", "side", "back"))
+        for view in nodes.COSTUME_VIEWS:
+            with self.subTest(view=view):
+                self.assertEqual(nodes.parse_pick_state(f'{{"id": "x", "view": "{view}"}}', "costume")["view"], view)
+
     def test_empty_id_uses_default(self):
         self.assertEqual(nodes.parse_pick_state('{"id": ""}', "costume")["id"], "SPR-0001")
 

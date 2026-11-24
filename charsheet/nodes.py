@@ -10,7 +10,7 @@ from .sheet import MAX_POSES, parse_sheet_state, plan_layout, render_layout, she
 CATEGORY = "CharSheet"
 POSES_TYPE = "CHARSHEET_POSES"
 DEFAULT_IDS = {"portrait": "f71f980dde3", "costume": "SPR-0001"}
-COSTUME_VIEWS = ("front", "back", "side")
+COSTUME_VIEWS = ("front", "diag", "side", "back")  # the fork's view set
 DEFAULT_RESIZE_MODE = "crop to size"
 DEFAULT_WIDTH, DEFAULT_HEIGHT = 1024, 1280
 PLACEHOLDER_SIZE = 64

@@ -88,6 +88,14 @@ def _depth_rel(rel: str) -> str:
     return clean
 
 
+MEDIA_TYPES = {".webp": "image/webp", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
+
+
+def media_content_type(path) -> str:
+    """Content-Type for a served gallery file, decided by suffix (not the process-wide mimetypes table)."""
+    return MEDIA_TYPES.get(Path(path).suffix.lower(), "application/octet-stream")
+
+
 def resolve_media(lib: str, item_id: str, kind: str, view=None, depth: bool = False):
     """Return ``(200, Path)`` for a gallery thumbnail or full image, else ``(status, {"error": ...})``."""
     if kind not in MEDIA_KINDS:
@@ -219,7 +227,12 @@ def register_routes() -> None:
         if status != 200:
             return web.json_response(payload, status=status)
         return web.FileResponse(
-            payload, headers={"Cache-Control": "public, max-age=86400", "X-Content-Type-Options": "nosniff"}
+            payload,
+            headers={
+                "Cache-Control": "public, max-age=86400",
+                "Content-Type": media_content_type(payload),
+                "X-Content-Type-Options": "nosniff",
+            },
         )
 
     @routes.get("/charsheet/thumb/{lib}/{id}")

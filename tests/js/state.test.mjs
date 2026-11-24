@@ -17,7 +17,7 @@ test("defaultState per library", () => {
   assert.deepEqual(defaultState("portrait"), { id: "" });
   assert.deepEqual(defaultState("costume"), { id: "", view: "front" });
   assert.deepEqual(defaultState("pose"), { ids: [], flip: [], use_depth: false });
-  assert.deepEqual(COSTUME_VIEWS, ["front", "back", "side"]);
+  assert.deepEqual(COSTUME_VIEWS, ["front", "diag", "side", "back"]);
 });
 
 test("parseState falls back to defaults on empty or broken JSON", () => {
@@ -32,6 +32,7 @@ test("parseState keeps valid fields and drops bad ones", () => {
   assert.deepEqual(parseState("portrait", '{"id":5}'), { id: "" });
   assert.deepEqual(parseState("costume", '{"id":"SPR-1","view":"back"}'), { id: "SPR-1", view: "back" });
   assert.deepEqual(parseState("costume", '{"id":"SPR-1","view":"top"}'), { id: "SPR-1", view: "front" });
+  assert.deepEqual(parseState("costume", '{"id":"SPR-1","view":"diag"}'), { id: "SPR-1", view: "diag" });
   assert.deepEqual(
     parseState("pose", '{"ids":["a",3,"b"],"flip":["b","zz"],"use_depth":true}'),
     { ids: ["a", "b"], flip: ["b"], use_depth: true }
@@ -85,9 +86,9 @@ test("costumeViewFor picks a view the item has", () => {
   assert.equal(costumeViewFor(["back", "side"], "front"), "back");
 });
 
-test("selectableViews keeps only the views state_json accepts, in catalogue order", () => {
-  assert.deepEqual(selectableViews(["front", "diag", "side", "back"]), ["front", "side", "back"]);
+test("selectableViews keeps the four known views in catalogue order", () => {
+  assert.deepEqual(selectableViews(["front", "diag", "side", "back", "top"]), ["front", "diag", "side", "back"]);
   assert.deepEqual(selectableViews(undefined), []);
-  assert.equal(costumeViewFor(["diag", "back"], "diag"), "back");
-  assert.equal(costumeViewFor(["front", "diag"], "diag"), "front");
+  assert.equal(costumeViewFor(["front", "diag", "back"], "diag"), "diag");
+  assert.equal(costumeViewFor(["top", "back"], "top"), "back");
 });

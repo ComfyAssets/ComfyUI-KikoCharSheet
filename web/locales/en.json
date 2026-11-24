@@ -79,8 +79,9 @@
   "view": {
     "label": "Costume view",
     "front": "Front",
-    "back": "Back",
-    "side": "Side"
+    "diag": "Three-quarter",
+    "side": "Side",
+    "back": "Back"
   },
   "sheet": {
     "columns": "Columns",

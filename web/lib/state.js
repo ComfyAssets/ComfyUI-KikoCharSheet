@@ -2,7 +2,7 @@
 // Shapes: portrait {id}, costume {id, view}, pose {ids, flip, use_depth}.
 import { MAX_POSES, move, remove, toggle, toggleFlip } from "./selection.js";
 
-export const COSTUME_VIEWS = ["front", "back", "side"];
+export const COSTUME_VIEWS = ["front", "diag", "side", "back"]; // the fork's view set, as in charsheet/nodes.py
 
 export function defaultState(lib) {
   if (lib === "pose") return { ids: [], flip: [], use_depth: false };
@@ -62,7 +62,7 @@ export function movePose(state, from, to) {
   return { ...state, ids: move(state.ids, from, to) };
 }
 
-/** Catalogue views that `state_json` may name (the catalogue also lists e.g. "diag"), in catalogue order. */
+/** Catalogue views that `state_json` may name, in catalogue order (unknown view ids are dropped). */
 export function selectableViews(views) {
   return Array.isArray(views) ? views.filter((v) => COSTUME_VIEWS.includes(v)) : [];
 }
