@@ -65,7 +65,8 @@
     "itemCount": "{{count}} 项",
     "current": "当前选择",
     "noneSelected": "尚未选择。",
-    "limit": "已达上限：最多 {{max}} 个姿势。"
+    "limit": "已达上限：最多 {{max}} 个姿势。",
+    "defaultHint": "未选择：节点将使用默认项。"
   },
   "tray": {
     "title": "已选姿势",

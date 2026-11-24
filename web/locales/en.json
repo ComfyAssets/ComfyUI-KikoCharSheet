@@ -65,7 +65,8 @@
     "itemCount": "{{count}} items",
     "current": "Current pick",
     "noneSelected": "Nothing selected yet.",
-    "limit": "Limit reached: at most {{max}} poses."
+    "limit": "Limit reached: at most {{max}} poses.",
+    "defaultHint": "Nothing picked: the node uses its default item."
   },
   "tray": {
     "title": "Selected poses",
