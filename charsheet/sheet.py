@@ -169,7 +169,7 @@ def _label_font(size: int):
 
 
 def render_layout(catalog, pose_entries: list[dict], state: dict):
-    """Draw the pose layout image: one equally scaled figure per panel."""
+    """Draw the pose layout image: each figure scaled to fill its own panel."""
     from PIL import Image, ImageDraw
 
     if not pose_entries:
@@ -180,21 +180,25 @@ def render_layout(catalog, pose_entries: list[dict], state: dict):
     panel_h = min(p[3] for p in plan["panels"])
     pad = max(2, round(_PAD_RATIO * min(panel_w, panel_h)))
     inner_w, inner_h = max(1, panel_w - 2 * pad), max(1, panel_h - 2 * pad)
-    target_h = min([inner_h] + [inner_w * fig.height / fig.width for fig in figures])
 
     canvas = Image.new("RGB", (plan["width"], plan["height"]), BACKGROUNDS[state["background"]])
     draw = ImageDraw.Draw(canvas)
     font = _label_font(max(14, panel_h // 18)) if state["labels"] else None
     for number, (fig, (x, y, w, h)) in enumerate(zip(figures, plan["panels"]), start=1):
         draw.rectangle((x, y, x + w - 1, y + h - 1), fill=_PANEL_FILL, outline=_FRAME)
-        scale = target_h / fig.height
-        size = (max(1, round(fig.width * scale)), max(1, round(target_h)))
+        scale = min(inner_w / fig.width, inner_h / fig.height)
+        size = (max(1, round(fig.width * scale)), max(1, round(fig.height * scale)))
         resized = fig.resize(size, Image.Resampling.LANCZOS)
         canvas.paste(resized, (x + (w - size[0]) // 2, y + (h - size[1]) // 2))
         if font:
             draw.text((x + pad, y + pad), str(number), fill=_LABEL, font=font)
     return canvas
 
+
+DEFAULT_STYLE = {
+    "en": "Photorealistic studio photograph, real person, natural skin texture, soft even lighting.",
+    "zh": "写实风格的棚拍照片，真人，自然的皮肤质感，柔和均匀的光线。",
+}
 
 _PROMPT = {
     "en": {
@@ -208,9 +212,9 @@ _PROMPT = {
         "match": " {scope}, match the pose and camera angle of the mannequin in that panel of <Picture {L}>; the mannequin is only a pose guide, not an appearance reference.",
         "scope_many": "In each panel",
         "scope_one": "In the panel",
-        "dress_many": " Dress the person in the complete outfit from <Picture {O}> in every panel.",
-        "dress_one": " Dress the person in the complete outfit from <Picture {O}>.",
-        "outfit": " The outfit: {text}.",
+        "dress_many": " Dress the person in the complete outfit from <Picture {O}> in every panel, copying every garment, colour and material exactly from that picture.",
+        "dress_one": " Dress the person in the complete outfit from <Picture {O}>, copying every garment, colour and material exactly from that picture.",
+        "outfit": " The outfit's garments, with colours taken from <Picture {O}>: {text}.",
         "keep": " Keep the face, hairstyle, skin tone and body proportions identical in every panel.",
         "panel": " Panel {i}: {text}.",
         "end": " Full body from head to toe in each panel, white gaps between panels, plain white background, no text or numbers.",
@@ -226,14 +230,24 @@ _PROMPT = {
         "match": "{scope}，人物的姿势和镜头角度须与<Picture {L}>对应格子里的人偶一致；人偶仅作姿势参考，不是外观参考。",
         "scope_many": "每个格子中",
         "scope_one": "在这个格子中",
-        "dress_many": "每个格子里都让人物穿上<Picture {O}>中的完整服装。",
-        "dress_one": "让人物穿上<Picture {O}>中的完整服装。",
-        "outfit": "服装描述：{text}。",
+        "dress_many": "每个格子里都让人物穿上<Picture {O}>中的完整服装，每件衣物的款式、颜色和材质都须与该图完全一致。",
+        "dress_one": "让人物穿上<Picture {O}>中的完整服装，每件衣物的款式、颜色和材质都须与该图完全一致。",
+        "outfit": "服装包含（颜色以<Picture {O}>为准）：{text}。",
         "keep": "每个格子中人物的面部、发型、肤色和身材比例保持完全一致。",
         "panel": "第{i}格：{text}。",
         "end": "每个格子均为从头到脚的全身像，格子之间留有白色间隙，纯白背景，不要文字或数字。",
     },
 }
+
+
+def style_text(style: str, lang: str) -> str:
+    """The style sentence for ``lang``: the default is translated, anything else is used as typed."""
+    text = (style or "").strip()
+    if not text:
+        return ""
+    if text == DEFAULT_STYLE["en"]:
+        return DEFAULT_STYLE[lang]
+    return text if text[-1] in ".。!！" else text + ("。" if lang == "zh" else ".")
 
 
 def _first_sentence(lang: str, n: int, who: str, layout_no: int) -> str:
@@ -257,6 +271,7 @@ def sheet_prompt(
     lang: str,
     character_prompt: str = "",
     outfit_prompt: str = "",
+    style: str = "",
 ) -> str:
     """The MiniMax H3 prompt for a pose sheet; pictures are character, layout, outfit."""
     if lang not in _PROMPT:
@@ -278,9 +293,12 @@ def sheet_prompt(
     if has_outfit:
         parts.append(t["dress_many" if many else "dress_one"].format(O=outfit_no))
         if outfit_prompt.strip():
-            parts.append(t["outfit"].format(text=outfit_prompt.strip()))
+            parts.append(t["outfit"].format(O=outfit_no, text=outfit_prompt.strip()))
     parts.append(t["keep"])
     for index, text in enumerate(pose_texts, start=1):
         parts.append(t["panel"].format(i=index, text=text.strip().rstrip(".。")))
+    look = style_text(style, lang)
+    if look:
+        parts.append(look if lang == "zh" else " " + look)
     parts.append(t["end"])
     return "".join(parts) if lang == "zh" else "".join(parts).lstrip()

@@ -290,8 +290,8 @@
         0
       ],
       "size": [
-        420,
-        260
+        460,
+        320
       ],
       "flags": {},
       "order": 3,
@@ -336,7 +336,7 @@
         "Node name for S&R": "StringConcatenate"
       },
       "widgets_values": [
-        "<Picture 1> is the character. <Picture 2> is the outfit. <Picture 3> is the pose. Draw the character from <Picture 1> wearing the outfit from <Picture 2> in the pose of <Picture 3>. Full body, plain background. ",
+        "<Picture 1> is the character. <Picture 2> is the outfit. <Picture 3> is the pose. Draw the character from <Picture 1> in the pose and camera angle of <Picture 3>; the mannequin is only a pose guide, not an appearance reference. Dress the character in the complete outfit from <Picture 2>, copying every garment, colour and material exactly from that picture. Photorealistic studio photograph, real person, natural skin texture, soft even lighting. Full body from head to toe, plain light grey studio background. ",
         "",
         ""
       ]
@@ -349,8 +349,8 @@
         0
       ],
       "size": [
-        300,
-        200
+        340,
+        110
       ],
       "flags": {},
       "order": 4,
@@ -396,11 +396,11 @@
       "type": "CLIPLoader",
       "pos": [
         2760,
-        130
+        170
       ],
       "size": [
-        300,
-        200
+        340,
+        150
       ],
       "flags": {},
       "order": 5,
@@ -455,11 +455,11 @@
       "type": "VAELoader",
       "pos": [
         2760,
-        280
+        380
       ],
       "size": [
-        300,
-        200
+        340,
+        90
       ],
       "flags": {},
       "order": 6,
@@ -496,12 +496,12 @@
       "id": 8,
       "type": "MiniMaxH3ImageConditioning",
       "pos": [
-        3100,
-        100
+        3160,
+        0
       ],
       "size": [
-        360,
-        260
+        400,
+        320
       ],
       "flags": {},
       "order": 7,
@@ -589,12 +589,12 @@
       "id": 9,
       "type": "ConditioningZeroOut",
       "pos": [
-        3500,
-        330
+        3160,
+        400
       ],
       "size": [
-        300,
-        200
+        400,
+        60
       ],
       "flags": {},
       "order": 8,
@@ -625,12 +625,12 @@
       "id": 10,
       "type": "KSampler",
       "pos": [
-        3760,
+        3620,
         0
       ],
       "size": [
-        300,
-        300
+        340,
+        500
       ],
       "flags": {},
       "order": 9,
@@ -732,12 +732,12 @@
       "id": 11,
       "type": "VAEDecode",
       "pos": [
-        4100,
+        4020,
         0
       ],
       "size": [
-        300,
-        200
+        260,
+        80
       ],
       "flags": {},
       "order": 10,
@@ -773,12 +773,12 @@
       "id": 12,
       "type": "SaveImage",
       "pos": [
-        4100,
-        100
+        4020,
+        140
       ],
       "size": [
-        320,
-        300
+        560,
+        620
       ],
       "flags": {},
       "order": 11,

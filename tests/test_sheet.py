@@ -168,7 +168,7 @@ class RenderLayoutTests(unittest.TestCase):
         self.assertEqual(plain.crop((x + w // 2, y + h // 2, x + w // 2 + 4, y + h // 2 + 4)).tobytes(),
                          labelled.crop((x + w // 2, y + h // 2, x + w // 2 + 4, y + h // 2 + 4)).tobytes())
 
-    def test_figures_get_the_same_height_whatever_their_source(self):
+    def test_each_figure_fills_its_own_panel(self):
         with tempfile.TemporaryDirectory() as tmp:
             assets = Path(tmp)
             (assets / "data").mkdir()
@@ -184,14 +184,17 @@ class RenderLayoutTests(unittest.TestCase):
             st = state()
             plan = sheet.plan_layout(2, st)
             img = sheet.render_layout(Catalog(assets), entries, st)
-            heights = []
-            for (x, y, w, h) in plan["panels"]:
+            pad = max(2, round(0.04 * min(plan["panels"][0][2], plan["panels"][0][3])))
+            for (x, y, w, h), (fig_w, fig_h) in zip(plan["panels"], ((10, 40), (40, 20))):
                 inner = img.crop((x + 3, y + 3, x + w - 3, y + h - 3)).convert("L").point(lambda v: 255 if v < 100 else 0)
                 bbox = inner.getbbox()
                 self.assertIsNotNone(bbox)
-                heights.append(bbox[3] - bbox[1])
                 self.assertAlmostEqual((bbox[0] + bbox[2]) / 2, (w - 6) / 2, delta=2)
-            self.assertLessEqual(abs(heights[0] - heights[1]), 2)
+                self.assertAlmostEqual((bbox[1] + bbox[3]) / 2, (h - 6) / 2, delta=2)
+                # The figure touches the padded panel on its tighter axis: a wide pose no longer shrinks a tall one.
+                scale = min((w - 2 * pad) / fig_w, (h - 2 * pad) / fig_h)
+                self.assertAlmostEqual(bbox[2] - bbox[0], fig_w * scale, delta=3)
+                self.assertAlmostEqual(bbox[3] - bbox[1], fig_h * scale, delta=3)
 
     def test_trim_uses_the_corner_colour_so_dark_backgrounds_are_trimmed(self):
         dark = Image.new("RGB", (100, 100), (15, 15, 15))
@@ -247,7 +250,7 @@ class SheetPromptTests(unittest.TestCase):
         got = sheet.sheet_prompt(2, True, True, self.texts, "en")
         want = ("Create one character reference sheet of the person from <Picture 1>, shown 2 times in the 2 panels of "
                 "<Picture 2>, in order left to right, top to bottom. In each panel, " + COMMON_EN.format(L=2) +
-                " Dress the person in the complete outfit from <Picture 3> in every panel. " + TAIL_EN)
+                " Dress the person in the complete outfit from <Picture 3> in every panel, copying every garment, colour and material exactly from that picture. " + TAIL_EN)
         self.assertEqual(got, want)
 
     def test_english_character_only(self):
@@ -260,7 +263,7 @@ class SheetPromptTests(unittest.TestCase):
         got = sheet.sheet_prompt(2, False, True, self.texts, "en")
         want = ("Create one character reference sheet of one person, shown 2 times in the 2 panels of "
                 "<Picture 1>, in order left to right, top to bottom. In each panel, " + COMMON_EN.format(L=1) +
-                " Dress the person in the complete outfit from <Picture 2> in every panel. " + TAIL_EN)
+                " Dress the person in the complete outfit from <Picture 2> in every panel, copying every garment, colour and material exactly from that picture. " + TAIL_EN)
         self.assertEqual(got, want)
 
     def test_english_neither(self):
@@ -273,24 +276,40 @@ class SheetPromptTests(unittest.TestCase):
         got = sheet.sheet_prompt(1, True, True, ["standing"], "en")
         want = ("Create one character reference sheet of the person from <Picture 1>, shown once in the single panel of "
                 "<Picture 2>. In the panel, " + COMMON_EN.format(L=2) +
-                " Dress the person in the complete outfit from <Picture 3>. " + TAIL_EN_1)
+                " Dress the person in the complete outfit from <Picture 3>, copying every garment, colour and material exactly from that picture. " + TAIL_EN_1)
         self.assertEqual(got, want)
 
     def test_english_extra_descriptions(self):
         got = sheet.sheet_prompt(2, True, True, self.texts, "en", character_prompt="tall, short red hair",
                                  outfit_prompt="a blue trench coat")
         self.assertIn("top to bottom. The person: tall, short red hair. In each panel,", got)
-        self.assertIn("in every panel. The outfit: a blue trench coat. Keep the face,", got)
+        self.assertIn("exactly from that picture. The outfit's garments, with colours taken from <Picture 3>: "
+                      "a blue trench coat. Keep the face,", got)
+
+    def test_style_goes_before_the_closing_sentence(self):
+        got = sheet.sheet_prompt(1, True, True, ["standing"], "en", style=sheet.DEFAULT_STYLE["en"])
+        self.assertIn("Panel 1: standing. Photorealistic studio photograph, real person, natural skin texture, "
+                      "soft even lighting. Full body from head to toe", got)
+        self.assertEqual(sheet.sheet_prompt(1, True, True, ["standing"], "en", style="  "),
+                         sheet.sheet_prompt(1, True, True, ["standing"], "en"))
+
+    def test_default_style_is_translated_and_custom_style_is_kept(self):
+        zh = sheet.sheet_prompt(1, True, True, ["站立"], "zh", style=sheet.DEFAULT_STYLE["en"])
+        self.assertIn("第1格：站立。写实风格的棚拍照片，真人，自然的皮肤质感，柔和均匀的光线。每个格子", zh)
+        self.assertIn("第1格：站立。flat anime cel shading。每个格子",
+                      sheet.sheet_prompt(1, True, True, ["站立"], "zh", style="flat anime cel shading"))
+        self.assertIn("standing. flat anime cel shading. Full body",
+                      sheet.sheet_prompt(1, True, True, ["standing"], "en", style="flat anime cel shading"))
 
     def test_outfit_description_is_skipped_without_outfit(self):
         got = sheet.sheet_prompt(2, True, False, self.texts, "en", outfit_prompt="a blue trench coat")
         self.assertNotIn("blue trench coat", got)
-        self.assertNotIn("The outfit", got)
+        self.assertNotIn("garments", got)
 
     def test_chinese_all_four_combinations(self):
         head = "生成一张角色设定参考图：{who}，在<Picture {L}>的2个分格中依次出现2次，顺序为从左到右、从上到下。"
         mid = "每个格子中，人物的姿势和镜头角度须与<Picture {L}>对应格子里的人偶一致；人偶仅作姿势参考，不是外观参考。"
-        dress = "每个格子里都让人物穿上<Picture {O}>中的完整服装。"
+        dress = "每个格子里都让人物穿上<Picture {O}>中的完整服装，每件衣物的款式、颜色和材质都须与该图完全一致。"
         cases = {
             (True, True): (head.format(who="<Picture 1>中的人物", L=2) + mid.format(L=2) + dress.format(O=3) + TAIL_ZH),
             (True, False): (head.format(who="<Picture 1>中的人物", L=2) + mid.format(L=2) + TAIL_ZH),
@@ -307,7 +326,7 @@ class SheetPromptTests(unittest.TestCase):
         self.assertIn("出现一次，位于<Picture 2>的单个分格中。人物描述：短发。在这个格子中，", got)
         self.assertNotIn("从左到右", got)
         self.assertIn("人物描述：短发。", got)
-        self.assertIn("让人物穿上<Picture 3>中的完整服装。服装描述：风衣。", got)
+        self.assertIn("须与该图完全一致。服装包含（颜色以<Picture 3>为准）：风衣。", got)
         self.assertIn("第1格：站立。", got)
 
     def test_validation(self):

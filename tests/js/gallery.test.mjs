@@ -56,3 +56,40 @@ test("thumbUrl builds the route with optional query", () => {
   assert.equal(thumbUrl("pose", "X", { depth: true }), "/charsheet/thumb/pose/X?depth=1");
   assert.equal(thumbUrl("pose", "X", { view: "front", depth: true }), "/charsheet/thumb/pose/X?view=front&depth=1");
 });
+
+test("cropRect gives a centred 4:5 crop and follows the frame position", async () => {
+  const { cropRect } = await import("../../web/lib/gallery.js");
+  assert.deepEqual(cropRect(941, 1672), { sx: 0, sy: 248, sw: 941, sh: 1176 }); // tall: full width
+  assert.deepEqual(cropRect(941, 1672, { y: 0 }), { sx: 0, sy: 0, sw: 941, sh: 1176 });
+  assert.deepEqual(cropRect(941, 1672, { y: 1 }), { sx: 0, sy: 496, sw: 941, sh: 1176 });
+  assert.deepEqual(cropRect(2000, 1000, { x: 1 }), { sx: 1200, sy: 0, sw: 800, sh: 1000 }); // wide: full height
+  assert.deepEqual(cropRect(2000, 1000, { x: 7, y: NaN }), { sx: 1200, sy: 0, sw: 800, sh: 1000 });
+  assert.deepEqual(cropRect(1024, 1280, { x: 0, y: 1 }), { sx: 0, sy: 0, sw: 1024, sh: 1280 });
+});
+
+test("frameBox matches cropRect as percentages", async () => {
+  const { frameBox } = await import("../../web/lib/gallery.js");
+  assert.deepEqual(frameBox(2000, 1000, { x: 0 }), { left: "0%", top: "0%", width: "40%", height: "100%" });
+  assert.deepEqual(frameBox(1000, 2500, { y: 1 }), { left: "0%", top: "50%", width: "100%", height: "50%" });
+});
+
+test("dragFrame moves along the free axis only and stops at the edges", async () => {
+  const { dragFrame } = await import("../../web/lib/gallery.js");
+  // 1000x2500: the frame is half the height, so dragging by a quarter of the image moves it half its travel.
+  assert.deepEqual(dragFrame(1000, 2500, { x: 0.5, y: 0.5 }, 0.3, -0.25), { x: 0.5, y: 0 });
+  assert.deepEqual(dragFrame(1000, 2500, { x: 0.5, y: 0.5 }, 0, 0.125), { x: 0.5, y: 0.75 });
+  assert.deepEqual(dragFrame(1000, 2500, { x: 0.5, y: 0.5 }, 0, 9), { x: 0.5, y: 1 });
+  assert.deepEqual(dragFrame(2000, 1000, { x: 0, y: 0.5 }, 0.3, 0.4), { x: 0.5, y: 0.5 });
+  assert.deepEqual(dragFrame(1024, 1280, { x: 0.5, y: 0.5 }, 0.2, 0.2), { x: 0.5, y: 0.5 });
+});
+
+test("isFullFrame and croppedFileName", async () => {
+  const { isFullFrame, croppedFileName, isValidUploadName } = await import("../../web/lib/gallery.js");
+  assert.equal(isFullFrame(1024, 1280), true);
+  assert.equal(isFullFrame(1600, 2000), true);
+  assert.equal(isFullFrame(941, 1672), false);
+  assert.equal(croppedFileName("me.JPG"), "me.png");
+  assert.equal(croppedFileName("我的 头像 (1).webp"), "我的 头像 (1).png");
+  assert.equal(croppedFileName("a.b.jpeg"), "a.b.png");
+  assert.equal(isValidUploadName(croppedFileName("ok.jpeg")), true);
+});

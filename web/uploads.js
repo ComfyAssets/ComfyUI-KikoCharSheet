@@ -4,7 +4,12 @@
 import {
   UPLOAD_ACCEPT,
   UPLOAD_SUBFOLDER,
+  cropRect,
+  croppedFileName,
+  dragFrame,
+  frameBox,
   formatUploadId,
+  isFullFrame,
   isValidUploadFile,
   isValidUploadName,
   sizeWarning,
@@ -42,13 +47,52 @@ async function deleteUploadRequest(api, lib, name) {
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 }
 
-/** CSS box (percent of the image) of the centred 4:5 frame inside an image of the given size. */
-function frameBox(width, height) {
-  const ratio = width / height;
-  const target = 4 / 5;
-  const w = ratio > target ? (target / ratio) * 100 : 100;
-  const h = ratio > target ? 100 : (ratio / target) * 100;
-  return { left: `${(100 - w) / 2}%`, top: `${(100 - h) / 2}%`, width: `${w}%`, height: `${h}%` };
+/** The part of `img` inside the crop frame, as a PNG file named after the original. */
+function cropToFile(img, pos, name) {
+  const { sx, sy, sw, sh } = cropRect(img.naturalWidth, img.naturalHeight, pos);
+  const canvas = document.createElement("canvas");
+  canvas.width = sw;
+  canvas.height = sh;
+  const context = canvas.getContext("2d");
+  if (!context) return Promise.reject(new Error("canvas unavailable"));
+  context.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(new File([blob], croppedFileName(name), { type: "image/png" }));
+      else reject(new Error("could not crop the image"));
+    }, "image/png");
+  });
+}
+
+/** Let the user drag the crop frame over the preview; `pos` is updated in place. */
+function makeFrameDraggable(frame, img, pos) {
+  let start = null;
+  const place = () => Object.assign(frame.style, frameBox(img.naturalWidth, img.naturalHeight, pos));
+  frame.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // keep the canvas from dragging the node
+    start = { x: e.clientX, y: e.clientY, pos: { ...pos } };
+    frame.setPointerCapture?.(e.pointerId);
+  });
+  frame.addEventListener("pointermove", (e) => {
+    if (!start) return;
+    e.stopPropagation();
+    const box = img.getBoundingClientRect();
+    if (!box.width || !box.height) return;
+    const next = dragFrame(
+      img.naturalWidth, img.naturalHeight, start.pos,
+      (e.clientX - start.x) / box.width, (e.clientY - start.y) / box.height
+    );
+    Object.assign(pos, next);
+    place();
+  });
+  const stop = (e) => {
+    start = null;
+    frame.releasePointerCapture?.(e.pointerId);
+  };
+  frame.addEventListener("pointerup", stop);
+  frame.addEventListener("pointercancel", stop);
+  place();
 }
 
 export class UploadSection {
@@ -285,23 +329,31 @@ export class UploadSection {
     const frame = el("div", { class: "cs-upload-frame", hidden: true });
     const warning = el("div", { class: "cs-warning-text", hidden: true });
     const error = el("div", { class: "cs-error-text", hidden: true });
+    const note = el("div", { class: "cs-card-sub", hidden: true, text: t("uploads.frameNote") });
+    const crop = { pos: { x: 0.5, y: 0.5 }, active: false };
     img.addEventListener("load", () => {
-      if (sizeWarning(img.naturalWidth)) {
-        warning.textContent = t("uploads.sizeWarning", { width: img.naturalWidth });
-        warning.hidden = false;
-      }
-      if (lib === "portrait" && img.naturalWidth && img.naturalHeight) {
-        Object.assign(frame.style, frameBox(img.naturalWidth, img.naturalHeight));
+      let storedWidth = img.naturalWidth;
+      if (lib === "portrait" && img.naturalWidth && img.naturalHeight && !isFullFrame(img.naturalWidth, img.naturalHeight)) {
+        crop.active = true;
+        storedWidth = cropRect(img.naturalWidth, img.naturalHeight).sw;
+        makeFrameDraggable(frame, img, crop.pos);
         frame.hidden = false;
+        note.hidden = false;
+      }
+      if (sizeWarning(storedWidth)) {
+        warning.textContent = t("uploads.sizeWarning", { width: storedWidth });
+        warning.hidden = false;
       }
     });
     const useBtn = el("button", { class: "cs-btn cs-btn-primary", type: "button", text: t("uploads.use") });
     const cancelBtn = el("button", { class: "cs-btn", type: "button", text: t("uploads.cancel"), onclick: () => this.openGuide() });
-    useBtn.addEventListener("click", () => this.upload(file, { useBtn, cancelBtn, error }));
+    useBtn.addEventListener("click", () =>
+      this.upload(file, { useBtn, cancelBtn, error }, crop.active ? () => cropToFile(img, crop.pos, file.name) : null)
+    );
     this.panel.replaceChildren(
       el("div", { class: "cs-upload-panel-title", text: t(`uploads.guideTitle.${lib}`) }),
       el("div", { class: "cs-upload-preview" }, [img, frame]),
-      lib === "portrait" ? el("div", { class: "cs-card-sub", text: t("uploads.frameNote") }) : null,
+      note,
       warning,
       el("div", { class: "cs-actions" }, [useBtn, cancelBtn]),
       error
@@ -317,7 +369,8 @@ export class UploadSection {
     useBtn.textContent = this.t("uploads.use");
   }
 
-  async upload(file, controls) {
+  /** `prepare`, when given, returns the file to store in place of `file` (the cropped portrait). */
+  async upload(file, controls, prepare = null) {
     const { generation } = this;
     controls.useBtn.disabled = true;
     controls.cancelBtn.disabled = true;
@@ -325,7 +378,7 @@ export class UploadSection {
     controls.error.hidden = true;
     let name;
     try {
-      name = await postUpload(this.api, this.lib, file);
+      name = await postUpload(this.api, this.lib, prepare ? await prepare() : file);
     } catch (err) {
       if (generation === this.generation) this.failUpload(this.t("uploads.uploadError", { error: errorText(err) }), controls);
       return;

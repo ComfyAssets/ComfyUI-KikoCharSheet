@@ -141,7 +141,7 @@
     "badType": "Only PNG, JPG and WebP images are supported.",
     "badName": "This file name is not allowed: no leading dot, no \"..\", slashes or control characters, at most 200 characters. Please rename the file and try again.",
     "badStoredName": "ComfyUI saved the file as \"{{name}}\", which is not an allowed name (no leading dot, no \"..\" or control characters, at most 200 characters). Please shorten the file name and upload again.",
-    "frameNote": "The 4:5 frame is only a guide. The image is stored uncropped; the picker node centre-crops it to the output size.",
+    "frameNote": "Drag the frame to choose the 4:5 crop. Only the framed area is stored.",
     "sizeWarning": "This image is {{width}} px wide. At least 1024 px is recommended.",
     "dimensions": "{{width}}×{{height}} px",
     "use": "Use this photo",

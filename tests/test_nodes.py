@@ -204,6 +204,12 @@ class PoseSheetNodeTests(NodeTestCase):
             for i in ("pose-safe", "pose-nsfw")
         ]
 
+    def test_style_reaches_both_prompts(self):
+        from charsheet.sheet import DEFAULT_STYLE
+        out = self.run_sheet(style=DEFAULT_STYLE["en"])["result"]
+        self.assertIn(DEFAULT_STYLE["en"], out[0])
+        self.assertIn(DEFAULT_STYLE["zh"], out[1])
+
     def test_without_character_or_outfit(self):
         out = self.run_sheet()["result"]
         prompt, prompt_zh, width, height, layout, i1, i2, i3, count = out
@@ -285,7 +291,14 @@ class RegistrationTests(unittest.TestCase):
         self.assertTrue(req["state_json"][1]["multiline"])
         sheet = nodes.CharSheetPoseSheet.INPUT_TYPES()
         self.assertEqual(sheet["required"]["selection"][0], "CHARSHEET_POSES")
-        self.assertEqual(set(sheet["optional"]), {"character_image", "outfit_image", "character_prompt", "outfit_prompt"})
+        self.assertEqual(
+            set(sheet["optional"]), {"character_image", "outfit_image", "character_prompt", "outfit_prompt", "style"}
+        )
+        # The two prompt inputs are sockets only; a multiline widget would leave a gap above the panel.
+        for name in ("character_prompt", "outfit_prompt"):
+            self.assertTrue(sheet["optional"][name][1]["forceInput"])
+        self.assertIn("Photorealistic", sheet["optional"]["style"][1]["default"])
+
 
 
 if __name__ == "__main__":

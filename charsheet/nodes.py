@@ -5,7 +5,7 @@ import json
 
 from . import catalog as catalog_module
 from . import images, prompts, uploads
-from .sheet import MAX_POSES, parse_sheet_state, plan_layout, render_layout, sheet_prompt
+from .sheet import DEFAULT_STYLE, MAX_POSES, parse_sheet_state, plan_layout, render_layout, sheet_prompt
 
 CATEGORY = "CharSheet"
 POSES_TYPE = "CHARSHEET_POSES"
@@ -210,8 +210,9 @@ class CharSheetPoseSheet:
             "optional": {
                 "character_image": ("IMAGE",),
                 "outfit_image": ("IMAGE",),
-                "character_prompt": ("STRING", {"multiline": True, "default": ""}),
-                "outfit_prompt": ("STRING", {"multiline": True, "default": ""}),
+                "character_prompt": ("STRING", {"forceInput": True}),
+                "outfit_prompt": ("STRING", {"forceInput": True}),
+                "style": ("STRING", {"multiline": False, "default": DEFAULT_STYLE["en"]}),
             },
         }
 
@@ -220,7 +221,7 @@ class CharSheetPoseSheet:
         return _validate(parse_sheet_state, state_json)
 
     def run(self, selection, state_json, character_image=None, outfit_image=None,
-            character_prompt="", outfit_prompt=""):
+            character_prompt="", outfit_prompt="", style=""):
         if not isinstance(selection, dict):
             raise ValueError("selection must come from a Pose Picker (Char Sheet) node")
         selection = normalize_selection(selection, allow_empty=False)
@@ -251,6 +252,7 @@ class CharSheetPoseSheet:
             return sheet_prompt(
                 len(entries), has_character, has_outfit, texts[lang], lang,
                 character_prompt=character_prompt or "", outfit_prompt=outfit_prompt or "",
+                style=style or "",
             )
 
         result = (

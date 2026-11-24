@@ -315,7 +315,9 @@
   position: absolute;
   border: 2px dashed #ffffffe6;
   box-shadow: 0 0 0 9999px #00000073;
-  pointer-events: none;
+  box-sizing: border-box;
+  cursor: move;
+  touch-action: none;
 }
 
 /* ---- Footer: current pick (single) or tray (pose) ---- */

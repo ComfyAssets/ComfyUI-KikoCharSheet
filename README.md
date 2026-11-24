@@ -23,7 +23,13 @@ The example workflows use the author's local model, text encoder and VAE file na
 
 The designer always outputs three images, filled in the order character, layout, outfit. A picture you do not connect is left out and the later ones move up. Unused `image_n` outputs are blank 64x64 white images. The `picture_count` output says how many are real. Connect only the first `picture_count` images to the conditioning node. For example, disconnect `image_3` when no costume is used.
 
-`character_prompt` does not need a character image. It adds a sentence that describes the person, and it works with or without a portrait. `outfit_prompt` only has an effect when an outfit image is connected. Without an outfit image, the outfit sentences are left out, including the text of `outfit_prompt`.
+`character_prompt` does not need a character image. It adds a sentence that describes the person, and it works with or without a portrait. `outfit_prompt` only has an effect when an outfit image is connected. Without an outfit image, the outfit sentences are left out, including the text of `outfit_prompt`. The prompt tells the model to copy garments, colours and materials from the outfit picture; the `outfit_prompt` text only lists the garments.
+
+`style` is one sentence added near the end of the prompt. The default asks for a photorealistic studio photograph. Replace it for another look (for example an illustration style), or clear it to leave the style to the model.
+
+## Portrait uploads
+
+A portrait upload that is not already 4:5 shows a crop frame over the preview. Drag the frame to choose the area; only that area is stored, as a PNG. Costume and pose uploads are stored as they are.
 
 ## Install
 

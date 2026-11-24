@@ -293,7 +293,7 @@
       ],
       "size": [
         600,
-        600
+        660
       ],
       "flags": {},
       "order": 3,
@@ -325,18 +325,20 @@
         {
           "name": "character_prompt",
           "type": "STRING",
-          "widget": {
-            "name": "character_prompt"
-          },
           "link": 4
         },
         {
           "name": "outfit_prompt",
           "type": "STRING",
-          "widget": {
-            "name": "outfit_prompt"
-          },
           "link": 5
+        },
+        {
+          "name": "style",
+          "type": "STRING",
+          "widget": {
+            "name": "style"
+          },
+          "link": null
         }
       ],
       "outputs": [
@@ -414,8 +416,7 @@
       },
       "widgets_values": [
         "{\"columns\": \"auto\", \"panel_aspect\": \"2:3\", \"size_mode\": \"auto\", \"width\": 2048, \"height\": 2048, \"labels\": false, \"background\": \"white\"}",
-        "",
-        ""
+        "Photorealistic studio photograph, real person, natural skin texture, soft even lighting."
       ]
     },
     {
@@ -426,8 +427,8 @@
         0
       ],
       "size": [
-        300,
-        200
+        340,
+        110
       ],
       "flags": {},
       "order": 4,
@@ -473,11 +474,11 @@
       "type": "CLIPLoader",
       "pos": [
         2920,
-        130
+        170
       ],
       "size": [
-        300,
-        200
+        340,
+        150
       ],
       "flags": {},
       "order": 5,
@@ -532,11 +533,11 @@
       "type": "VAELoader",
       "pos": [
         2920,
-        280
+        380
       ],
       "size": [
-        300,
-        200
+        340,
+        90
       ],
       "flags": {},
       "order": 6,
@@ -573,12 +574,12 @@
       "id": 8,
       "type": "MiniMaxH3ImageConditioning",
       "pos": [
-        3260,
-        100
+        3320,
+        0
       ],
       "size": [
-        360,
-        260
+        400,
+        320
       ],
       "flags": {},
       "order": 7,
@@ -666,12 +667,12 @@
       "id": 9,
       "type": "ConditioningZeroOut",
       "pos": [
-        3660,
-        330
+        3320,
+        400
       ],
       "size": [
-        300,
-        200
+        400,
+        60
       ],
       "flags": {},
       "order": 8,
@@ -702,12 +703,12 @@
       "id": 10,
       "type": "KSampler",
       "pos": [
-        3920,
+        3780,
         0
       ],
       "size": [
-        300,
-        300
+        340,
+        500
       ],
       "flags": {},
       "order": 9,
@@ -809,12 +810,12 @@
       "id": 11,
       "type": "VAEDecode",
       "pos": [
-        4260,
+        4180,
         0
       ],
       "size": [
-        300,
-        200
+        260,
+        80
       ],
       "flags": {},
       "order": 10,
@@ -850,12 +851,12 @@
       "id": 12,
       "type": "SaveImage",
       "pos": [
-        4260,
-        100
+        4180,
+        140
       ],
       "size": [
-        320,
-        300
+        560,
+        620
       ],
       "flags": {},
       "order": 11,
@@ -895,11 +896,11 @@
       "type": "PreviewImage",
       "pos": [
         2920,
-        700
+        540
       ],
       "size": [
-        320,
-        300
+        340,
+        340
       ],
       "flags": {},
       "order": 12,

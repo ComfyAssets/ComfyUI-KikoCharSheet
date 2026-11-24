@@ -61,6 +61,58 @@ export function sizeWarning(width) {
   return width < MIN_UPLOAD_WIDTH;
 }
 
+// ---- Portrait crop frame ----
+
+export const CROP_ASPECT = 4 / 5;
+
+const clamp01 = (v) => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0.5);
+
+/**
+ * The 4:5 crop of a width x height image, in source pixels. `pos` is where the frame sits along
+ * the axis it can move on: `x` and `y` run from 0 (left / top) to 1 (right / bottom), 0.5 = centred.
+ */
+export function cropRect(width, height, pos = {}) {
+  const wide = width / height > CROP_ASPECT;
+  const sw = wide ? Math.min(width, Math.round(height * CROP_ASPECT)) : width;
+  const sh = wide ? height : Math.min(height, Math.round(width / CROP_ASPECT));
+  return {
+    sx: Math.round((width - sw) * clamp01(pos.x ?? 0.5)),
+    sy: Math.round((height - sh) * clamp01(pos.y ?? 0.5)),
+    sw,
+    sh,
+  };
+}
+
+/** CSS box (percent of the image) of the crop frame for the same arguments as `cropRect`. */
+export function frameBox(width, height, pos = {}) {
+  const { sx, sy, sw, sh } = cropRect(width, height, pos);
+  const pct = (part, whole) => `${(part / whole) * 100}%`;
+  return { left: pct(sx, width), top: pct(sy, height), width: pct(sw, width), height: pct(sh, height) };
+}
+
+/** Frame position after dragging it by (dx, dy) image-fractions of the preview; stays inside the image. */
+export function dragFrame(width, height, pos, dx, dy) {
+  const { sw, sh } = cropRect(width, height);
+  const freeX = 1 - sw / width;
+  const freeY = 1 - sh / height;
+  return {
+    x: freeX > 0 ? clamp01(clamp01(pos?.x ?? 0.5) + dx / freeX) : 0.5,
+    y: freeY > 0 ? clamp01(clamp01(pos?.y ?? 0.5) + dy / freeY) : 0.5,
+  };
+}
+
+/** True when the image is already 4:5, so there is nothing to crop. */
+export function isFullFrame(width, height) {
+  const { sw, sh } = cropRect(width, height);
+  return sw === width && sh === height;
+}
+
+/** A cropped upload is stored as PNG: swap the extension, keep the rest of the name. */
+export function croppedFileName(name) {
+  const dot = name.lastIndexOf(".");
+  return `${dot > 0 ? name.slice(0, dot) : name}.png`;
+}
+
 // ---- Thumbnails ----
 
 /** Backend thumbnail route for a gallery item; `view` (costume) and `depth` (pose) are optional. */
