@@ -81,7 +81,7 @@ def _fetch_remote(catalog: Catalog, item: dict, url: str, opener=None):
     formats = allowed[url]
     opener = opener or urllib.request.build_opener(_NoRedirect())
     request = urllib.request.Request(
-        url, headers={"User-Agent": "comfyui-h3-charsheet", "Accept": "image/jpeg,image/png,image/webp"}
+        url, headers={"User-Agent": "ComfyUI-KikoCharSheet", "Accept": "image/jpeg,image/png,image/webp"}
     )
     try:
         with opener.open(request, timeout=20) as response:

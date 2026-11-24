@@ -1,4 +1,4 @@
-# Character Sheet Pickers for ComfyUI
+# ComfyUI-KikoCharSheet
 
 Four ComfyUI nodes that pick references for a character sheet and prepare them for MiniMax H3 Image. They work with the H3 Character Sheet Designer pack, but do not need it.
 
@@ -83,7 +83,11 @@ Full credits, image terms and the reasons for the separate download: `docs/LICEN
 
 ## Install
 
-1. Put this folder in `ComfyUI/custom_nodes/` (a clone or a symlink).
+1. Clone this pack into `ComfyUI/custom_nodes/`:
+
+   ```
+   git clone https://github.com/ComfyAssets/ComfyUI-KikoCharSheet.git kikocharsheet
+   ```
 2. Get your own copy of the gallery images and data. They are not part of this pack (see the credits above). Clone the gallery project; the images come with the clone, about 1.2 GB:
 
    ```

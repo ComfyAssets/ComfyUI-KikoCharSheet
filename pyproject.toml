@@ -1,7 +1,16 @@
 [project]
-name = "comfyui-h3-charsheet"
+name = "kikocharsheet"
+description = "Pick a portrait, a costume and poses from in-node galleries and prepare them for MiniMax H3, with English names and your own uploads."
 version = "0.1.0"
+license = {text = "MIT"}
 requires-python = ">=3.10"
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/ComfyAssets/ComfyUI-KikoCharSheet"
+#  Used by Comfy Registry https://registry.comfy.org
 
 [tool.comfy]
-DisplayName = "Character Sheet Pickers"
+PublisherId = "kiko9"
+DisplayName = "ComfyUI-KikoCharSheet"
+includes = []
