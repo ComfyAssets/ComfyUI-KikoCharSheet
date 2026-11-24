@@ -17,7 +17,13 @@ All four are in the `CharSheet` category. Each picker shows a browsable panel in
 2. **H3 references.** Send the portrait to the H3 Character Sheet Designer as `character_image`, the costume as `reference_image_1`, and `pose_1` and `pose_2` as `reference_image_2` and `_3`. Workflow: `workflows/charsheet-h3-references.json`.
 3. **One image per pose.** The Pose Picker outputs lists (`poses`, `pose_prompts_en`). ComfyUI runs what follows once per pose. Workflow: `workflows/charsheet-one-per-pose.json`.
 
-The example workflows use the model, text encoder and VAE file names from the H3 Character Sheet example workflow. Change them if your files are named differently. They need the nodes of this pack and ComfyUI's MiniMax H3 nodes. The H3 references workflow also needs the H3 Character Sheet Designer pack.
+The example workflows use the author's local model, text encoder and VAE file names (taken from the H3 Character Sheet example workflow). Change them to the names of your own files. They need the nodes of this pack and ComfyUI's MiniMax H3 nodes. The H3 references workflow also needs the H3 Character Sheet Designer pack.
+
+## Blank image slots and prompt text
+
+The designer always outputs three images, filled in the order character, layout, outfit. A picture you do not connect is left out and the later ones move up. Unused `image_n` outputs are blank 64x64 white images. The `picture_count` output says how many are real. Connect only the first `picture_count` images to the conditioning node. For example, disconnect `image_3` when no costume is used.
+
+`character_prompt` does not need a character image. It adds a sentence that describes the person, and it works with or without a portrait. `outfit_prompt` only has an effect when an outfit image is connected. Without an outfit image, the outfit sentences are left out, including the text of `outfit_prompt`.
 
 ## Install
 
@@ -31,7 +37,7 @@ The example workflows use the model, text encoder and VAE file names from the H3
    This copies about 1.2 GB. Use `--force` to replace an existing `assets/`. Without `assets/`, the nodes raise an error that names this script.
 3. Restart ComfyUI.
 
-Python needs nothing beyond what ComfyUI ships. Tests: `python -m unittest discover -s tests -p 'test_*.py'` and `npm test`.
+Python needs nothing beyond what ComfyUI ships. Run the Python tests with ComfyUI's Python environment, because plain `python` has no torch or Pillow: `<ComfyUI>/venv/bin/python -m unittest discover -s tests -p 'test_*.py'`. Run the JS tests with `npm test`.
 
 Licences, image sources and what you may do with the images: [docs/LICENSES-AND-SETUP.md](docs/LICENSES-AND-SETUP.md).
 

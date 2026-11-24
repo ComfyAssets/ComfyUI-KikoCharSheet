@@ -944,7 +944,7 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "## Pose sheet to MiniMax H3 Image\n\nPick a portrait, a costume and up to 13 poses. The Pose Sheet Designer lays the poses out on one layout image and writes the prompt. Its `image_1` (character), `image_2` (layout) and `image_3` (outfit) feed H3 Image Conditioning.\n\nModel, text encoder and VAE names are the ones in the H3 Character Sheet example workflow. Change them to match your files."
+        "## Pose sheet to MiniMax H3 Image\n\nPick a portrait, a costume and up to 13 poses. The Pose Sheet Designer lays the poses out on one layout image and writes the prompt. Its `image_1` (character), `image_2` (layout) and `image_3` (outfit) feed H3 Image Conditioning.\n\nModel, text encoder and VAE names are the author's local file names. Change them to match your own files.\n\nUnused `image_n` outputs are blank 64x64 white images. Connect only the first `picture_count` images to the conditioning node, for example disconnect `image_3` when no costume is used."
       ]
     }
   ],
