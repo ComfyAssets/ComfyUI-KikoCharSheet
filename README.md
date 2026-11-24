@@ -33,19 +33,35 @@ The Costume Picker has an `include_footwear` switch, on by default. It adds an i
 
 A portrait upload that is not already 4:5 shows a crop frame over the preview. Drag the frame to choose the area; only that area is stored, as a PNG. Costume and pose uploads are stored as they are.
 
+## Thanks and credits
+
+Thank you to ギア (@giaaibusi) for the original pose, costume and portrait galleries, and to [Anhao](https://github.com/anhao/ai-pose-gallery-zh) for the Chinese gallery project that organised and translated them. Thanks also to たき AI (@taki_auto) for [CharaDB](https://github.com/taki-ttt/charadb), to the [Shisei](https://github.com/wquguru/shisei) authors for the Chinese historical costumes, and to ukr8b3g-cmyk, whose [H3 Character Sheet Designer](https://github.com/ukr8b3g-cmyk/H3-Character-Sheet-Designer) inspired the in-node panels. This pack exists because of their work. Please visit the original projects and give their creators the credit and support they deserve.
+
+The aim here is to make these references convenient to use inside ComfyUI with MiniMax H3: pick a face, an outfit and poses in the node, with English descriptions and prompt text you can edit.
+
+This is an independent adaptation. It is not endorsed by or affiliated with any of the creators above. It contains none of their images: you download your own copy from the gallery project, because the images are not ours to redistribute. If a creator or rights holder would like this pack, or any reference to their material, removed, I will gladly take it down.
+
+Full credits, image terms and the reasons for the separate download: `docs/LICENSES-AND-SETUP.md`.
+
 ## Install
 
 1. Put this folder in `ComfyUI/custom_nodes/` (a clone or a symlink).
-2. Copy the gallery images and data into `assets/`. You need a clone of the ai-pose-gallery fork; the images come with the clone, so there is nothing else to download:
+2. Get your own copy of the gallery images and data. They are not part of this pack (see the credits above). Clone the gallery project; the images come with the clone, about 1.2 GB:
 
    ```
-   python3 scripts/setup_assets.py --from /path/to/ai-pose-gallery-en
+   git clone --depth 1 https://github.com/anhao/ai-pose-gallery-zh.git
    ```
 
-   On Windows, run it with the Python that runs your ComfyUI: `python scripts\setup_assets.py --from C:\path\to\ai-pose-gallery-en`.
+3. Copy them into this pack's `assets/` folder:
+
+   ```
+   python3 scripts/setup_assets.py --from /path/to/ai-pose-gallery-zh
+   ```
+
+   On Windows, run it with the Python that runs your ComfyUI: `python scripts\setup_assets.py --from C:\path\to\ai-pose-gallery-zh`.
 
    This copies about 1.2 GB. Use `--force` to replace an existing `assets/`. Without `assets/`, the nodes raise an error that names this script.
-3. Restart ComfyUI.
+4. Restart ComfyUI. The English names for poses, costumes and hairstyles ship with this pack, so there is nothing more to set up.
 
 Python needs nothing beyond what ComfyUI ships. Run the Python tests with ComfyUI's Python environment, because plain `python` has no torch or Pillow: `<ComfyUI>/venv/bin/python -m unittest discover -s tests -p 'test_*.py'`. Run the JS tests with `npm test`.
 

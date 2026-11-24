@@ -1,4 +1,3 @@
-import json
 import sys
 import tempfile
 import unittest
@@ -21,8 +20,6 @@ def make_source(root: Path) -> Path:
     (src / "img" / "a.png").write_bytes(b"x")
     (src / "thumbs").mkdir()
     (src / "thumbs" / "a.png").write_bytes(b"x")
-    (src / "locales" / "en").mkdir(parents=True)
-    (src / "locales" / "en" / "data.json").write_text(json.dumps({"a": "b"}), encoding="utf-8")
     return src
 
 
@@ -42,9 +39,7 @@ class SetupAssetsTests(unittest.TestCase):
         self.assertFalse((self.dest / "img").is_symlink())
         self.assertTrue((self.dest / "img" / "a.png").is_file())
         self.assertTrue((self.dest / "thumbs" / "a.png").is_file())
-        self.assertEqual(
-            json.loads((self.dest / "locales" / "en" / "data.json").read_text(encoding="utf-8")), {"a": "b"}
-        )
+        self.assertFalse((self.dest / "locales").exists())  # the English names ship with the pack
         self.assertEqual(res["mode"], "copy")
 
     def test_refuses_without_force(self):

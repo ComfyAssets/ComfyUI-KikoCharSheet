@@ -217,7 +217,7 @@ class PoseSheetNodeTests(NodeTestCase):
     def texts(self, flips=()):
         from charsheet import prompts
         return [
-            prompts.describe("pose", self.cat.find("pose", i), "en", mirrored=i in flips, assets_dir=self.cat.assets_dir)
+            prompts.describe("pose", self.cat.find("pose", i), "en", mirrored=i in flips)
             for i in ("pose-safe", "pose-nsfw")
         ]
 

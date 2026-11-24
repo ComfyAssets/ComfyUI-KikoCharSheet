@@ -134,7 +134,7 @@ class _PickerNode:
         catalog, item, image = _open_fitted(
             self.LIB, state["id"], state.get("view", "front"), resize_mode, width, height
         )
-        describe = lambda lang: prompts.describe(self.LIB, item, lang, assets_dir=catalog.assets_dir)  # noqa: E731
+        describe = lambda lang: prompts.describe(self.LIB, item, lang)  # noqa: E731
         return (images.to_tensor(image), describe("en"), describe("zh"), state["id"])
 
 
@@ -201,7 +201,7 @@ class CharSheetPose:
             )
             tensors.append(images.to_tensor(image))
             for target, lang in ((texts_en, "en"), (texts_zh, "zh")):
-                target.append(prompts.describe("pose", item, lang, mirrored=mirrored, assets_dir=catalog.assets_dir))
+                target.append(prompts.describe("pose", item, lang, mirrored=mirrored))
         count = len(tensors)
         blank = lambda: images.to_tensor(images.blank(width, height))  # noqa: E731
         pose_1 = tensors[0] if count > 0 else blank()
@@ -251,7 +251,7 @@ class CharSheetPoseSheet:
         items = [images.resolve_item(catalog, "pose", item_id) for item_id in selection["ids"]]
         texts = {
             lang: [
-                prompts.describe("pose", item, lang, mirrored=item_id in flipped, assets_dir=catalog.assets_dir)
+                prompts.describe("pose", item, lang, mirrored=item_id in flipped)
                 for item_id, item in zip(selection["ids"], items)
             ]
             for lang in ("en", "zh")

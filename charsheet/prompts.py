@@ -5,7 +5,9 @@ import json
 from functools import lru_cache
 from pathlib import Path
 
-from .catalog import default_catalog
+# English names for the gallery's Chinese data values (pose names, categories, costume tags...).
+# It ships with the pack, so users get the translations without downloading anything extra.
+DATA_MAP = Path(__file__).resolve().parents[1] / "locales" / "en" / "data.json"
 
 _UPLOAD_TEXT = {
     "en": {
@@ -23,8 +25,7 @@ _MIRRORED = {"en": " (mirrored)", "zh": "（镜像）"}
 
 
 @lru_cache(maxsize=8)
-def _table(assets_dir: Path) -> dict:
-    path = Path(assets_dir) / "locales" / "en" / "data.json"
+def _table(path: Path) -> dict:
     try:
         table = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -32,9 +33,9 @@ def _table(assets_dir: Path) -> dict:
     return table if isinstance(table, dict) else {}
 
 
-def make_translator(assets_dir: Path):
+def make_translator(data_map: Path | None = None):
     """Return value -> English; unknown or empty entries fall back to the original."""
-    table = _table(Path(assets_dir))
+    table = _table(Path(data_map or DATA_MAP))
 
     def translate(value: str) -> str:
         if not value:
@@ -73,7 +74,7 @@ def _portrait(item: dict, lang: str, td) -> str:
 _BUILDERS = {"pose": _pose, "costume": _costume, "portrait": _portrait}
 
 
-def describe(lib: str, item: dict, lang: str, mirrored: bool = False, assets_dir=None) -> str:
+def describe(lib: str, item: dict, lang: str, mirrored: bool = False, data_map=None) -> str:
     if lib not in _BUILDERS:
         raise ValueError(f"unknown library: {lib}")
     if lang not in _MIRRORED:
@@ -81,7 +82,7 @@ def describe(lib: str, item: dict, lang: str, mirrored: bool = False, assets_dir
     if item.get("source") == "upload":
         text = _UPLOAD_TEXT[lang][lib]
     else:
-        td = make_translator(assets_dir or default_catalog().assets_dir)
+        td = make_translator(data_map)
         text = _BUILDERS[lib](item, lang, td)
     return text + (_MIRRORED[lang] if mirrored else "")
 

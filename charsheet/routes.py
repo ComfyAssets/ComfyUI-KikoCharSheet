@@ -8,6 +8,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 from . import catalog as catalog_module
+from . import prompts as prompts_module
 from . import uploads
 from .catalog import AssetsMissingError, LIBS, is_nsfw, select_costume_view
 from .nodes import normalize_selection
@@ -184,7 +185,7 @@ def handle_locales(lang: str):
         strings = _read_json_file(LOCALES_DIR / f"{lang}.json")
         data = {}
         if lang == "en":
-            data = _read_json_file(catalog_module.default_catalog().assets_dir / "locales" / "en" / "data.json")
+            data = _read_json_file(prompts_module.DATA_MAP)
     except (OSError, ValueError) as exc:
         return _error(500, f"locale file could not be read: {exc}")
     return 200, {"strings": strings, "data": data}

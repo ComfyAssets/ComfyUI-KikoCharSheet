@@ -221,13 +221,15 @@ class LocaleTests(RouteTestCase):
         super().setUp()
         self.web = self.root / "web" / "locales"
         self.web.mkdir(parents=True)
-        patcher = mock.patch.object(routes, "LOCALES_DIR", self.web)
-        patcher.start()
-        self.addCleanup(patcher.stop)
+        self.data_map = self.root / "data.json"
+        for target, name, value in ((routes, "LOCALES_DIR", self.web), (routes.prompts_module, "DATA_MAP", self.data_map)):
+            patcher = mock.patch.object(target, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     def test_en_includes_data_map(self):
         (self.web / "en.json").write_text('{"hello": "Hello"}', encoding="utf-8")
-        (self.assets / "locales" / "en" / "data.json").write_text('{"站姿": "Standing"}', encoding="utf-8")
+        self.data_map.write_text('{"站姿": "Standing"}', encoding="utf-8")
         self.assertEqual(
             routes.handle_locales("en"), (200, {"strings": {"hello": "Hello"}, "data": {"站姿": "Standing"}}))
 
@@ -239,7 +241,6 @@ class LocaleTests(RouteTestCase):
         self.assertEqual(routes.handle_locales("../x")[0], 404)
 
     def test_missing_data_file_is_empty(self):
-        (self.assets / "locales" / "en" / "data.json").unlink()
         self.assertEqual(routes.handle_locales("en"), (200, {"strings": {}, "data": {}}))
 
 

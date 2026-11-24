@@ -1,3 +1,4 @@
+import json
 import sys
 import tempfile
 import unittest
@@ -17,7 +18,7 @@ UPLOAD = {"id": "upload:x.png", "source": "upload", "原图": "upload:x.png"}
 
 
 def d(lib, item, lang, mirrored=False):
-    return prompts.describe(lib, item, lang, mirrored, assets_dir=FIXTURE)
+    return prompts.describe(lib, item, lang, mirrored, data_map=FIXTURE / "locales" / "en" / "data.json")
 
 
 class DescribeTests(unittest.TestCase):
@@ -66,16 +67,22 @@ class DescribeTests(unittest.TestCase):
 
     def test_missing_translation_map_is_identity(self):
         with tempfile.TemporaryDirectory() as tmp:
-            out = prompts.describe("pose", POSE, "en", assets_dir=Path(tmp))
+            out = prompts.describe("pose", POSE, "en", data_map=Path(tmp) / "missing.json")
         self.assertEqual(out, "侧面 view, pose: 站立 (站姿)")
 
-    def test_default_assets_dir_is_catalog_default(self):
+    def test_upload_text_needs_no_map(self):
         self.assertEqual(prompts.describe("pose", UPLOAD, "en"), "the pose in the uploaded pose photo")
 
-    @unittest.skipUnless((REPO / "assets" / "locales" / "en" / "data.json").is_file(), "assets/ not set up")
-    def test_real_translation_map_loads(self):
-        td = prompts.make_translator(REPO / "assets")
-        self.assertTrue(td("站姿"))
+    def test_the_pack_ships_the_english_data_map(self):
+        self.assertEqual(prompts.DATA_MAP, REPO / "locales" / "en" / "data.json")
+        table = json.loads(prompts.DATA_MAP.read_text(encoding="utf-8"))
+        self.assertGreater(len(table), 2000)
+        self.assertTrue(all(isinstance(k, str) and isinstance(v, str) and v for k, v in table.items()))
+        # Used by default, with no assets folder involved.
+        self.assertEqual(prompts.make_translator()("站姿"), table["站姿"])
+        text = prompts.describe("pose", POSE, "en")
+        self.assertIn(table["站姿"], text)
+        self.assertNotIn("站姿", text)
 
 
 

@@ -37,7 +37,7 @@ class Catalog:
         path = self.assets_dir / "data" / name
         if not path.is_file():
             raise AssetsMissingError(
-                f"Gallery data not found: {path}. Run `python3 scripts/setup_assets.py --from <fork path>` first."
+                f"Gallery data not found: {path}. Run `python3 scripts/setup_assets.py --from <path to a clone of ai-pose-gallery-zh>` first."
             )
         with open(path, encoding="utf-8") as fh:
             return json.load(fh)
