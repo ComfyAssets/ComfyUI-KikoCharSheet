@@ -138,6 +138,14 @@
             "name": "height"
           },
           "link": null
+        },
+        {
+          "name": "include_footwear",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "include_footwear"
+          },
+          "link": null
         }
       ],
       "outputs": [
@@ -177,7 +185,8 @@
         "{\"id\": \"SPR-0001\", \"view\": \"front\"}",
         "crop to size",
         1024,
-        1280
+        1280,
+        true
       ]
     },
     {

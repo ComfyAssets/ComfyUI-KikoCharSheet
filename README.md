@@ -25,6 +25,8 @@ The designer always outputs three images, filled in the order character, layout,
 
 `character_prompt` does not need a character image. It adds a sentence that describes the person, and it works with or without a portrait. `outfit_prompt` only has an effect when an outfit image is connected. Without an outfit image, the outfit sentences are left out, including the text of `outfit_prompt`. The prompt tells the model to copy garments, colours and materials from the outfit picture; the `outfit_prompt` text only lists the garments.
 
+The Costume Picker has an `include_footwear` switch, on by default. It adds an instruction to the costume's prompt text: wear the shoes shown in the outfit picture, or, when off, leave the shoes out. It takes effect where that text is used, so connect the picker's `prompt_en` to `outfit_prompt` (the example workflows do).
+
 `style` is one sentence added near the end of the prompt. The default asks for a photorealistic studio photograph. Replace it for another look (for example an illustration style), or clear it to leave the style to the model.
 
 ## Portrait uploads

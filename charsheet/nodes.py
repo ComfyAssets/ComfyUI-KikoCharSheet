@@ -145,6 +145,21 @@ class CharSheetPortrait(_PickerNode):
 class CharSheetCostume(_PickerNode):
     LIB = "costume"
 
+    @classmethod
+    def INPUT_TYPES(cls):
+        inputs = _picker_inputs()
+        inputs["optional"] = {"include_footwear": ("BOOLEAN", {"default": True})}
+        return inputs
+
+    def run(self, state_json, resize_mode, width, height, include_footwear=True):
+        image, prompt_en, prompt_zh, item_id = super().run(state_json, resize_mode, width, height)
+        return (
+            image,
+            prompts.with_footwear(prompt_en, include_footwear, "en"),
+            prompts.with_footwear(prompt_zh, include_footwear, "zh"),
+            item_id,
+        )
+
 
 class CharSheetPose:
     FUNCTION = "run"

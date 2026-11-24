@@ -84,3 +84,21 @@ def describe(lib: str, item: dict, lang: str, mirrored: bool = False, assets_dir
         td = make_translator(assets_dir or default_catalog().assets_dir)
         text = _BUILDERS[lib](item, lang, td)
     return text + (_MIRRORED[lang] if mirrored else "")
+
+
+_FOOTWEAR = {
+    "en": {True: "include the footwear shown in the outfit picture, worn on both feet",
+           False: "leave out the footwear, the person wears no shoes"},
+    "zh": {True: "包含服装图中的鞋子，双脚都要穿上", False: "不要鞋子，人物不穿鞋"},
+}
+
+
+def with_footwear(text: str, include: bool, lang: str) -> str:
+    """Append the footwear instruction to a costume description."""
+    if lang not in _FOOTWEAR:
+        raise ValueError(f"unsupported language: {lang!r}")
+    base = (text or "").strip().rstrip(".。;；")
+    note = _FOOTWEAR[lang][bool(include)]
+    if not base:
+        return note[0].upper() + note[1:]
+    return base + ("；" if lang == "zh" else "; ") + note

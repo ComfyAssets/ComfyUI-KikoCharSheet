@@ -78,5 +78,27 @@ class DescribeTests(unittest.TestCase):
         self.assertTrue(td("站姿"))
 
 
+
+class FootwearTests(unittest.TestCase):
+    def test_footwear_instruction_is_appended(self):
+        self.assertEqual(
+            prompts.with_footwear("knit top skirt sneakers.", True, "en"),
+            "knit top skirt sneakers; include the footwear shown in the outfit picture, worn on both feet",
+        )
+        self.assertEqual(
+            prompts.with_footwear("knit top", False, "en"), "knit top; leave out the footwear, the person wears no shoes"
+        )
+        self.assertEqual(prompts.with_footwear("针织衫。", True, "zh"), "针织衫；包含服装图中的鞋子，双脚都要穿上")
+        self.assertEqual(prompts.with_footwear("针织衫", False, "zh"), "针织衫；不要鞋子，人物不穿鞋")
+
+    def test_footwear_instruction_stands_alone_without_a_description(self):
+        self.assertEqual(
+            prompts.with_footwear("  ", True, "en"), "Include the footwear shown in the outfit picture, worn on both feet"
+        )
+        self.assertEqual(prompts.with_footwear(None, False, "zh"), "不要鞋子，人物不穿鞋")
+        with self.assertRaises(ValueError):
+            prompts.with_footwear("x", True, "fr")
+
+
 if __name__ == "__main__":
     unittest.main()

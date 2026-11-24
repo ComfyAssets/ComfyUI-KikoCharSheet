@@ -1,8 +1,8 @@
 {
   "id": "00000000-0000-4000-8000-488197902512",
   "revision": 0,
-  "last_node_id": 13,
-  "last_link_id": 15,
+  "last_node_id": 14,
+  "last_link_id": 17,
   "nodes": [
     {
       "id": 1,
@@ -136,6 +136,14 @@
             "name": "height"
           },
           "link": null
+        },
+        {
+          "name": "include_footwear",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "include_footwear"
+          },
+          "link": null
         }
       ],
       "outputs": [
@@ -150,7 +158,9 @@
         {
           "name": "prompt_en",
           "type": "STRING",
-          "links": [],
+          "links": [
+            16
+          ],
           "slot_index": 1
         },
         {
@@ -173,7 +183,8 @@
         "{\"id\": \"SPR-0001\", \"view\": \"front\"}",
         "crop to size",
         1024,
-        1280
+        1280,
+        true
       ]
     },
     {
@@ -294,7 +305,7 @@
         320
       ],
       "flags": {},
-      "order": 3,
+      "order": 4,
       "mode": 0,
       "inputs": [
         {
@@ -311,7 +322,7 @@
           "widget": {
             "name": "string_b"
           },
-          "link": 1
+          "link": 17
         },
         {
           "name": "delimiter",
@@ -336,7 +347,7 @@
         "Node name for S&R": "StringConcatenate"
       },
       "widgets_values": [
-        "<Picture 1> is the character. <Picture 2> is the outfit. <Picture 3> is the pose. Draw the character from <Picture 1> in the pose and camera angle of <Picture 3>; the mannequin is only a pose guide, not an appearance reference. Dress the character in the complete outfit from <Picture 2>, copying every garment, colour and material exactly from that picture. Photorealistic studio photograph, real person, natural skin texture, soft even lighting. Full body from head to toe, plain light grey studio background. ",
+        "<Picture 1> is the character. <Picture 2> is the outfit. <Picture 3> is the pose. Draw the character from <Picture 1> in the pose and camera angle of <Picture 3>; the mannequin is only a pose guide, not an appearance reference. Dress the character in the complete outfit from <Picture 2>, copying every garment, colour and material exactly from that picture. Photorealistic studio photograph, real person, natural skin texture, soft even lighting. Full body from head to toe, plain light grey studio background. The outfit's garments, with colours taken from <Picture 2>: ",
         "",
         ""
       ]
@@ -835,17 +846,68 @@
       "widgets_values": [
         "## One image per pose\n\nPose Picker outputs a list. ComfyUI runs the nodes after it once per pose, so each pose gets its own image. The portrait and the costume are reused for every run.\n\nThe pose prompt text comes from `pose_prompts_en` for the same pose."
       ]
+    },
+    {
+      "id": 14,
+      "type": "StringConcatenate",
+      "pos": [
+        2280,
+        380
+      ],
+      "size": [
+        460,
+        200
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_a",
+          "type": "STRING",
+          "widget": {
+            "name": "string_a"
+          },
+          "link": 16
+        },
+        {
+          "name": "string_b",
+          "type": "STRING",
+          "widget": {
+            "name": "string_b"
+          },
+          "link": 1
+        },
+        {
+          "name": "delimiter",
+          "type": "STRING",
+          "widget": {
+            "name": "delimiter"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            17
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringConcatenate"
+      },
+      "widgets_values": [
+        "",
+        "",
+        ". The pose: "
+      ]
     }
   ],
   "links": [
-    [
-      1,
-      3,
-      1,
-      4,
-      1,
-      "STRING"
-    ],
     [
       2,
       6,
@@ -957,6 +1019,30 @@
       8,
       7,
       "IMAGE"
+    ],
+    [
+      1,
+      3,
+      1,
+      14,
+      1,
+      "STRING"
+    ],
+    [
+      16,
+      2,
+      1,
+      14,
+      0,
+      "STRING"
+    ],
+    [
+      17,
+      14,
+      0,
+      4,
+      1,
+      "STRING"
     ]
   ],
   "groups": [],

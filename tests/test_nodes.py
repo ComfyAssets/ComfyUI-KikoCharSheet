@@ -109,6 +109,17 @@ class PickerNodeTests(NodeTestCase):
         self.assertEqual(item_id, "shisei-C001")
         self.assertEqual(node.run("", "original", 10, 10)[3], "SPR-0001")
 
+    def test_costume_footwear_option(self):
+        node = nodes.CharSheetCostume()
+        self.assertTrue(nodes.CharSheetCostume.INPUT_TYPES()["optional"]["include_footwear"][1]["default"])
+        self.assertNotIn("optional", nodes.CharSheetPortrait.INPUT_TYPES())
+        _, en, zh, _ = node.run("", "original", 10, 10)
+        self.assertTrue(en.lower().endswith("include the footwear shown in the outfit picture, worn on both feet"))
+        self.assertTrue(zh.endswith("包含服装图中的鞋子，双脚都要穿上"))
+        _, en, zh, _ = node.run("", "original", 10, 10, include_footwear=False)
+        self.assertTrue(en.lower().endswith("leave out the footwear, the person wears no shoes"))
+        self.assertTrue(zh.endswith("不要鞋子，人物不穿鞋"))
+
     def test_unknown_id_names_it(self):
         with self.assertRaises(ValueError) as cm:
             nodes.CharSheetPortrait().run('{"id": "nope"}', "original", 64, 64)
