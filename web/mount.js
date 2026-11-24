@@ -5,6 +5,7 @@
 import { createTranslator, loadLocale, resolveLang } from "./lib/i18n.js";
 import { MAX_POSES } from "./lib/selection.js";
 import { serializeState } from "./lib/state.js";
+import { setValueOnce } from "./lib/widget.js";
 import { createPickerPanel } from "./panel.js";
 
 export const PICKER_NODES = { CharSheetPortrait: "portrait", CharSheetCostume: "costume", CharSheetPose: "pose" };
@@ -77,12 +78,39 @@ function chain(node, name, after) {
   };
 }
 
+/** Hide the plain `state_json` widget; returns a function that puts it back exactly as it was. */
 function hideStateWidget(widget) {
+  const element = widget.element ?? widget.inputEl;
+  const saved = {
+    type: widget.type,
+    hidden: widget.hidden,
+    ownComputeSize: Object.prototype.hasOwnProperty.call(widget, "computeSize"),
+    computeSize: widget.computeSize,
+    elementHidden: element?.hidden,
+  };
   widget.type = "hidden";
   widget.hidden = true;
   widget.computeSize = () => [0, -4];
-  const element = widget.element ?? widget.inputEl;
   if (element) element.hidden = true;
+  return () => {
+    widget.type = saved.type;
+    widget.hidden = saved.hidden;
+    if (saved.ownComputeSize) widget.computeSize = saved.computeSize;
+    else delete widget.computeSize;
+    if (element) element.hidden = saved.elementHidden;
+  };
+}
+
+/** Remove our presentation-only DOM widget (never the canonical state_json widget). */
+function removeDomWidget(node, domWidget) {
+  if (node.widgets?.includes(domWidget)) {
+    if (typeof node.removeWidget === "function") node.removeWidget(domWidget);
+    else {
+      domWidget.onRemove?.();
+      node.widgets.splice(node.widgets.indexOf(domWidget), 1);
+    }
+  } else domWidget.onRemove?.();
+  domWidget.element?.remove?.();
 }
 
 export function installPanel(node, app, api) {
@@ -116,7 +144,7 @@ export function installPanel(node, app, api) {
     return null;
   }
   domWidget.serialize = false;
-  hideStateWidget(widget);
+  const unhide = hideStateWidget(widget);
 
   let panel = null;
   let frame = 0;
@@ -128,10 +156,7 @@ export function installPanel(node, app, api) {
     lastValue = json;
     if (json === widget.value) return;
     const previous = widget.value;
-    transaction(node, app.canvas, () => {
-      widget.value = json;
-      widget.callback?.(json);
-    });
+    transaction(node, app.canvas, () => setValueOnce(widget, json));
     node.onWidgetChanged?.("state_json", json, previous, widget);
   };
 
@@ -164,15 +189,25 @@ export function installPanel(node, app, api) {
 
   getTranslator(app, api).then((translate) => {
     if (disposed) return;
-    panel = createPickerPanel({
-      lib,
-      multi: lib === "pose",
-      max: MAX_POSES,
-      state: widget.value,
-      onChange: write,
-      translate,
-      api,
-    });
+    try {
+      panel = createPickerPanel({
+        lib,
+        multi: lib === "pose",
+        max: MAX_POSES,
+        state: widget.value,
+        onChange: write,
+        translate,
+        api,
+      });
+    } catch (err) {
+      // Leave the node editable: drop the panel and show the plain text widget again.
+      record.dispose();
+      removeDomWidget(node, domWidget);
+      unhide();
+      node.setDirtyCanvas?.(true, true);
+      warnFallback(`the panel could not be built: ${err instanceof Error ? err.message : String(err)}`);
+      return;
+    }
     lastValue = String(widget.value ?? "");
     host.replaceChildren(panel.root);
     frame = requestAnimationFrame(loop);

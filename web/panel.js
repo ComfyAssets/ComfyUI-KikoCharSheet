@@ -4,6 +4,7 @@ import { getCatalog } from "./lib/catalog.js";
 import { filterItems, filterOptions } from "./lib/filters.js";
 import { BATCH_SIZE, nextRenderCount, parseUploadId, renderCountToInclude } from "./lib/gallery.js";
 import { MAX_POSES } from "./lib/selection.js";
+import { firstVisibleId, restoredScrollTop } from "./lib/scroll.js";
 import { costumeViewFor, flipPose, movePose, parseState, removePose, selectableViews, togglePose } from "./lib/state.js";
 import { LIBRARIES, buildCard, optionLabel, setCardSelected, thumbSrc, updateCardThumb } from "./cards.js";
 import { el, errorText, setThumbSrc, thumbBox, thumbImage } from "./dom.js";
@@ -115,7 +116,16 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
   footer.appendChild(multi ? tray.root : pickBox);
 
   const root = el("div", { class: `cs-panel cs-lib-${lib}`, "data-lib": lib }, [header, filterRow, sfwConfirm, scroll, footer]);
-  const fullscreen = createFullscreen(root, { onChange: updateExpandButton });
+  const fullscreen = createFullscreen(root, { onChange: updateExpandButton, snapshot: snapshotScroll, restore: restoreScroll });
+
+  // Keys pressed inside the panel stay in the panel: ComfyUI's window-level keybindings only skip
+  // text fields, so Delete on a focused card would delete the node. Ctrl/Meta combos (undo, copy)
+  // and Escape outside full screen still reach ComfyUI.
+  root.addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.metaKey) return;
+    if (e.key === "Escape" && !fullscreen.isOpen()) return;
+    e.stopPropagation();
+  });
 
   const uploads = new UploadSection({
     api,
@@ -390,8 +400,32 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
   /** Centre a card in the panel's own scroll area (never scrolls the page or canvas). */
   function scrollToCard(card) {
     if (!card) return;
-    const top = card.getBoundingClientRect().top - scroll.getBoundingClientRect().top + scroll.scrollTop;
-    scroll.scrollTop = Math.max(0, top - scroll.clientHeight / 2 + card.offsetHeight / 2);
+    // Layout offsets (relative to the positioned scroll box) are unaffected by canvas zoom.
+    scroll.scrollTop = Math.max(0, card.offsetTop - (scroll.clientHeight - card.offsetHeight) / 2);
+  }
+
+  function gridColumns() {
+    const template = getComputedStyle(grid).gridTemplateColumns;
+    return template && template !== "none" ? template.split(" ").length : 0;
+  }
+
+  /** Scroll state before the ⤢ move: scrollTop, column count and the first visible card. */
+  function snapshotScroll() {
+    const boxes = [];
+    for (const card of grid.children) boxes.push({ id: card.dataset.id, top: card.offsetTop, bottom: card.offsetTop + card.offsetHeight });
+    return { top: scroll.scrollTop, columns: gridColumns(), anchorId: firstVisibleId(boxes, scroll.scrollTop) };
+  }
+
+  function restoreScroll(snap) {
+    if (!snap) return;
+    const anchor = snap.anchorId ? cards.get(snap.anchorId) : null;
+    const target = restoredScrollTop(snap, { columns: gridColumns(), anchorTop: anchor ? anchor.offsetTop : null });
+    // A wider grid is shorter: render more batches until the target is reachable, or it gets clamped.
+    while (scroll.scrollHeight - scroll.clientHeight < target && rendered < filtered.length) {
+      renderUpTo(nextRenderCount(rendered, filtered.length, BATCH_SIZE));
+    }
+    scroll.scrollTop = target;
+    observeSentinel();
   }
 
   grid.addEventListener("click", (e) => {

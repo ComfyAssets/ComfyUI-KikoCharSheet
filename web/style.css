@@ -147,6 +147,7 @@
   padding: 2px 4px 2px 2px;
   scrollbar-width: thin;
   overscroll-behavior: contain;
+  overflow-anchor: none; /* the grid only grows downwards; we restore scroll ourselves */
 }
 .cs-section-title { font-size: 12px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: var(--cs-muted); margin-bottom: 6px; }
 .cs-uploads { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #33414e; }
