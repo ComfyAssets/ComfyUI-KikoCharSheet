@@ -42,6 +42,11 @@ export function serializeState(lib, state) {
   return JSON.stringify({ id: state.id });
 }
 
+/** Empty a portrait or costume pick (the node then uses its default item); a costume's view goes back to front. */
+export function clearPick(lib, state) {
+  return { ...state, ...defaultState(lib) };
+}
+
 /** Add or remove a pose; removing also clears its flip. A full selection refuses new ids. */
 export function togglePose(state, id, max = MAX_POSES) {
   const { sel, refused } = toggle(state.ids, id, max);

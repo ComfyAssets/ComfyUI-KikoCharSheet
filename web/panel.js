@@ -5,7 +5,7 @@ import { filterItems, filterOptions } from "./lib/filters.js";
 import { BATCH_SIZE, nextRenderCount, parseUploadId, renderCountToInclude } from "./lib/gallery.js";
 import { MAX_POSES } from "./lib/selection.js";
 import { firstVisibleId, restoredScrollTop } from "./lib/scroll.js";
-import { costumeViewFor, flipPose, movePose, parseState, removePose, selectableViews, togglePose } from "./lib/state.js";
+import { clearPick, costumeViewFor, flipPose, movePose, parseState, removePose, selectableViews, togglePose } from "./lib/state.js";
 import { LIBRARIES, buildCard, optionLabel, setCardSelected, thumbSrc, updateCardThumb } from "./cards.js";
 import { el, errorText, setThumbSrc, thumbBox, thumbImage } from "./dom.js";
 import { createFullscreen } from "./fullscreen.js";
@@ -108,10 +108,20 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
   const pickNote = el("div", { class: "cs-pick-note" });
   const viewSelect = el("select", { class: "cs-select cs-view-select", "aria-label": t("view.label"), title: t("view.label") });
   const viewField = el("label", { class: "cs-view-field", hidden: true }, [el("span", { text: t("view.label") }), viewSelect]);
+  const pickRemove = el("button", {
+    class: "cs-chip-btn cs-chip-remove cs-pick-remove",
+    type: "button",
+    title: t("tray.remove"),
+    "aria-label": t("tray.remove"),
+    text: "×",
+    hidden: true,
+    onclick: () => commit(clearPick(lib, current)),
+  });
   const pickBox = el("div", { class: "cs-pick" }, [
     thumbBox(pickThumb, "cs-pick-thumb"),
     el("div", { class: "cs-pick-text" }, [el("div", { class: "cs-section-title", text: t("state.current") }), pickTitle, pickId, pickNote]),
     lib === "costume" ? viewField : null,
+    pickRemove,
   ]);
   footer.appendChild(multi ? tray.root : pickBox);
 
@@ -136,7 +146,7 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
     onPick: (id, opts) => pick(id, opts),
     onDeleted: (id) => {
       if (multi) commit(removePose(current, id));
-      else if (current.id === id) commit({ ...current, id: "" });
+      else if (current.id === id) commit(clearPick(lib, current));
     },
   });
 
@@ -309,6 +319,7 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
     pickBox.classList.toggle("cs-empty", !id);
     pickBox.classList.toggle("cs-missing", missing);
     pickThumb.hidden = !id;
+    pickRemove.hidden = !id;
     if (id) setThumbSrc(pickThumb, thumbSrc(ctx, id, item, thumbOpts(id)));
     pickTitle.textContent = id ? itemLabel(id) : t("state.noneSelected");
     pickId.textContent = id ? `#${id}` : "";

@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   COSTUME_VIEWS,
+  clearPick,
   defaultState,
   parseState,
   serializeState,
@@ -91,4 +92,11 @@ test("selectableViews keeps the four known views in catalogue order", () => {
   assert.deepEqual(selectableViews(undefined), []);
   assert.equal(costumeViewFor(["front", "diag", "back"], "diag"), "diag");
   assert.equal(costumeViewFor(["top", "back"], "top"), "back");
+});
+
+test("clearPick empties a single pick and resets the costume view without mutating", () => {
+  const costume = { id: "SUM-0237", view: "back" };
+  assert.deepEqual(clearPick("costume", costume), { id: "", view: "front" });
+  assert.deepEqual(costume, { id: "SUM-0237", view: "back" });
+  assert.deepEqual(clearPick("portrait", { id: "por-a" }), { id: "" });
 });
