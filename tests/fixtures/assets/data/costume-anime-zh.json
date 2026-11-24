@@ -1,0 +1,10 @@
+[
+ {
+  "id": "charadb-1",
+  "source": "charadb",
+  "分类": "动漫",
+  "敏感": true,
+  "缩略图": "https://example.invalid/t.jpg",
+  "原图": "https://example.invalid/o.jpg"
+ }
+]

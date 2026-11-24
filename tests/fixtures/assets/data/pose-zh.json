@@ -1,0 +1,16 @@
+[
+ {
+  "id": "pose-safe",
+  "缩略图": "thumbs/pose/pose-safe.png",
+  "原图": "img/pose/pose-safe.png",
+  "体系": "全身单人・基础",
+  "分类": "站姿"
+ },
+ {
+  "id": "pose-nsfw",
+  "缩略图": "thumbs/pose/pose-nsfw.png",
+  "原图": "img/pose/pose-nsfw.png",
+  "体系": "双人缠绵",
+  "分类": "站姿"
+ }
+]

@@ -1,0 +1,7 @@
+[project]
+name = "comfyui-h3-charsheet"
+version = "0.1.0"
+requires-python = ">=3.10"
+
+[tool.comfy]
+DisplayName = "Character Sheet Pickers"

@@ -1,0 +1,24 @@
+[
+ {
+  "id": "shisei-C001",
+  "source": "shisei",
+  "分类": "中国历代",
+  "views": [
+   {
+    "id": "front",
+    "缩略图": "thumbs/costume/shisei-C001-front.png",
+    "预览图": "img/costume/shisei-C001-front.png",
+    "原图": "img/costume/shisei-C001-front.png"
+   },
+   {
+    "id": "back",
+    "缩略图": "thumbs/costume/shisei-C001-back.png",
+    "预览图": "img/costume/shisei-C001-back.png",
+    "原图": "img/costume/shisei-C001-back.png"
+   }
+  ],
+  "缩略图": "thumbs/costume/shisei-C001-front.png",
+  "预览图": "img/costume/shisei-C001-front.png",
+  "原图": "img/costume/shisei-C001-front.png"
+ }
+]

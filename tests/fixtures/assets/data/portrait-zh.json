@@ -1,0 +1,14 @@
+[
+ {
+  "id": "por-a",
+  "缩略图": "thumbs/portrait/por-a.png",
+  "原图": "img/portrait/por-a.png",
+  "分区": "正脸参考"
+ },
+ {
+  "id": "por-b",
+  "缩略图": "thumbs/portrait/por-b.png",
+  "原图": "img/portrait/por-b.png",
+  "分区": "侧脸参考"
+ }
+]
