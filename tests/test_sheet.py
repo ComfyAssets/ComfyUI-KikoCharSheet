@@ -79,11 +79,25 @@ class PlanLayoutTests(unittest.TestCase):
 
     def test_auto_columns_pick_fewest_cells_and_tie_prefers_fewer_rows(self):
         self.assertEqual(sheet.plan_layout(5, state())["columns"], 5)
+        self.assertEqual(sheet.plan_layout(7, state())["columns"], 4)
         # n=4: 4x1 and 2x2 both use four cells; fewer rows wins.
         plan = sheet.plan_layout(4, state())
         self.assertEqual((plan["columns"], plan["rows"]), (4, 1))
         # n=13: 7x2 (14 cells) beats 5x3 (15 cells)
         self.assertEqual(sheet.plan_layout(13, state())["columns"], 7)
+
+    def test_auto_canvas_aspect_is_capped(self):
+        self.assertEqual(sheet.MAX_CANVAS_RATIO, 2.5)
+        for aspect in ("1:2", "2:3", "1:1"):
+            for n in range(1, 14):
+                with self.subTest(aspect=aspect, n=n):
+                    plan = sheet.plan_layout(n, state(panel_aspect=aspect))
+                    ratio = max(plan["width"], plan["height"]) / min(plan["width"], plan["height"])
+                    self.assertLessEqual(ratio, 2.6)  # 2.5 plus rounding to steps of 32
+
+    def test_fixed_columns_beyond_the_cap_still_plan(self):
+        plan = sheet.plan_layout(7, state(columns=7))
+        self.assertEqual((plan["columns"], plan["rows"]), (7, 1))
 
     def test_fixed_columns_and_centred_last_row(self):
         plan = sheet.plan_layout(5, state(columns=3))
@@ -179,6 +193,32 @@ class RenderLayoutTests(unittest.TestCase):
                 self.assertAlmostEqual((bbox[0] + bbox[2]) / 2, (w - 6) / 2, delta=2)
             self.assertLessEqual(abs(heights[0] - heights[1]), 2)
 
+    def test_trim_uses_the_corner_colour_so_dark_backgrounds_are_trimmed(self):
+        dark = Image.new("RGB", (100, 100), (15, 15, 15))
+        dark.paste((230, 230, 230), (40, 10, 50, 70))
+        self.assertEqual(sheet._trim_background(dark).size, (10, 60))
+        light = Image.new("RGB", (100, 100), WHITE)
+        light.paste((0, 0, 0), (40, 10, 50, 70))
+        self.assertEqual(sheet._trim_background(light).size, (10, 60))
+        self.assertEqual(sheet._trim_background(Image.new("RGB", (20, 30), (15, 15, 15))).size, (20, 30))
+
+    def test_dark_background_drawing_is_scaled_by_its_figure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            assets = Path(tmp)
+            (assets / "data").mkdir()
+            (assets / "img" / "pose").mkdir(parents=True)
+            im = Image.new("RGB", (200, 200), (10, 10, 10))
+            im.paste((240, 240, 240), (90, 20, 110, 180))
+            im.save(assets / "img" / "pose" / "d.png")
+            rows = [{"id": "d", "原图": "img/pose/d.png", "体系": "x", "分类": "y"}]
+            (assets / "data" / "pose-zh.json").write_text(json.dumps(rows), encoding="utf-8")
+            st = state()
+            x, y, w, h = sheet.plan_layout(1, st)["panels"][0]
+            img = sheet.render_layout(Catalog(assets), [{"id": "d"}], st)
+            panel = img.crop((x + 3, y + 3, x + w - 3, y + h - 3)).convert("L").point(lambda v: 255 if v > 128 and v < 250 else 0)
+            box = panel.getbbox()
+            self.assertGreater((box[3] - box[1]) / h, 0.85)
+
     def test_rejects_unknown_pose(self):
         with self.assertRaisesRegex(ValueError, "nope"):
             sheet.render_layout(Catalog(FIXTURE), [{"id": "nope", "flip": False, "use_depth": False}], state())
@@ -232,7 +272,7 @@ class SheetPromptTests(unittest.TestCase):
     def test_english_single_panel(self):
         got = sheet.sheet_prompt(1, True, True, ["standing"], "en")
         want = ("Create one character reference sheet of the person from <Picture 1>, shown once in the single panel of "
-                "<Picture 2>, in order left to right, top to bottom. In the panel, " + COMMON_EN.format(L=2).replace("that panel", "that panel") +
+                "<Picture 2>. In the panel, " + COMMON_EN.format(L=2) +
                 " Dress the person in the complete outfit from <Picture 3>. " + TAIL_EN_1)
         self.assertEqual(got, want)
 
@@ -264,7 +304,8 @@ class SheetPromptTests(unittest.TestCase):
 
     def test_chinese_single_panel_and_extras(self):
         got = sheet.sheet_prompt(1, True, True, ["站立"], "zh", character_prompt="短发", outfit_prompt="风衣")
-        self.assertIn("出现一次，位于<Picture 2>的单个分格中", got)
+        self.assertIn("出现一次，位于<Picture 2>的单个分格中。人物描述：短发。在这个格子中，", got)
+        self.assertNotIn("从左到右", got)
         self.assertIn("人物描述：短发。", got)
         self.assertIn("让人物穿上<Picture 3>中的完整服装。服装描述：风衣。", got)
         self.assertIn("第1格：站立。", got)

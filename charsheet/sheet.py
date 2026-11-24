@@ -11,7 +11,7 @@ AUTO_AREA = 2048 * 2048
 STEP = 32
 MIN_PANEL = 256
 MAX_COLUMNS = 7
-MAX_CANVAS_RATIO = 4  # longest side : shortest side of an Auto canvas; stops 13 poses becoming a 1x13 strip
+MAX_CANVAS_RATIO = 2.5  # longest : shortest side of an Auto canvas (H3's own five-view sheet is 3840x1536)
 MIN_SIDE = 64
 MAX_SIDE = 8192
 GAP_RATIO = 0.02
@@ -108,23 +108,24 @@ def plan_layout(n: int, state: dict) -> dict:
         raise ValueError(f"a pose sheet needs 1 to {MAX_POSES} poses, got {n!r}")
     aspect = PANEL_ASPECTS[state["panel_aspect"]]
     manual = state["size_mode"] == "manual"
-    best = None
+    candidates = []
     for columns in _candidate_columns(n, state):
         rows = math.ceil(n / columns)
-        width, height = (
-            (_round_step(state["width"]), _round_step(state["height"])) if manual else _auto_canvas(columns, rows, aspect)
-        )
-        if not manual and max(width, height) / min(width, height) > MAX_CANVAS_RATIO:
-            continue
+        if manual:
+            width, height = _round_step(state["width"]), _round_step(state["height"])
+            ratio = 1.0
+        else:
+            width, height = _auto_canvas(columns, rows, aspect)
+            ideal = columns * aspect / rows
+            ratio = max(ideal, 1 / ideal)
         panels, rows = _grid(n, columns, width, height)
         # Auto size: panel area is AUTO_AREA / cells, so fewest cells wins. Manual: compare real panel area.
         score = -(panels[0][2] * panels[0][3]) if manual else columns * rows
-        key = (score, rows)
-        if best is None or key < best[0]:
-            best = (key, columns, rows, width, height, panels)
-    if best is None:
-        raise ValueError(f"no grid fits {n} poses; choose a column count")
-    _, columns, rows, width, height, panels = best
+        candidates.append((ratio, (score, rows), columns, rows, width, height, panels))
+    allowed = [c for c in candidates if c[0] <= MAX_CANVAS_RATIO + 1e-9]
+    # If no grid is wide/tall enough within the cap, use the squarest one.
+    best = min(allowed, key=lambda c: c[1]) if allowed else min(candidates, key=lambda c: (c[0], c[1]))
+    _, _, columns, rows, width, height, panels = best
     warnings = []
     short_side = min(min(w, h) for _, _, w, h in panels)
     if short_side < MIN_PANEL:
@@ -136,10 +137,14 @@ def plan_layout(n: int, state: dict) -> dict:
     }
 
 
-def _trim_white(img):
+def _trim_background(img):
+    """Crop to the drawing, treating the corner pixels' colour as its background."""
     from PIL import Image, ImageChops
 
-    diff = ImageChops.difference(img, Image.new("RGB", img.size, (255, 255, 255))).convert("L")
+    w, h = img.size
+    corners = [img.getpixel(pt) for pt in ((0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1))]
+    background = tuple(sorted(c[i] for c in corners)[len(corners) // 2] for i in range(3))
+    diff = ImageChops.difference(img, Image.new("RGB", img.size, background)).convert("L")
     box = diff.point(lambda v: 255 if v > _INK_THRESHOLD else 0).getbbox()
     return img.crop(box) if box else img
 
@@ -151,7 +156,7 @@ def _load_figure(catalog, entry: dict):
         flipped = fit(source, "original", 0, 0, flip=bool(entry.get("flip")))
     finally:
         source.close()
-    return _trim_white(flipped)
+    return _trim_background(flipped)
 
 
 def _label_font(size: int):
@@ -193,7 +198,8 @@ def render_layout(catalog, pose_entries: list[dict], state: dict):
 
 _PROMPT = {
     "en": {
-        "make": "Create one character reference sheet of {who}, shown {times} of <Picture {L}>, in order left to right, top to bottom.",
+        "make": "Create one character reference sheet of {who}, shown {times} of <Picture {L}>{order}.",
+        "order": ", in order left to right, top to bottom",
         "who_person": "the person from <Picture 1>",
         "who_generic": "one person",
         "times_many": "{n} times in the {n} panels",
@@ -210,7 +216,8 @@ _PROMPT = {
         "end": " Full body from head to toe in each panel, white gaps between panels, plain white background, no text or numbers.",
     },
     "zh": {
-        "make": "生成一张角色设定参考图：{who}，{times}<Picture {L}>的{scope_tail}，顺序为从左到右、从上到下。",
+        "make": "生成一张角色设定参考图：{who}，{times}<Picture {L}>的{scope_tail}{order}。",
+        "order": "，顺序为从左到右、从上到下",
         "who_person": "<Picture 1>中的人物",
         "who_generic": "一位人物",
         "times_many": "在",
@@ -233,13 +240,13 @@ def _first_sentence(lang: str, n: int, who: str, layout_no: int) -> str:
     t = _PROMPT[lang]
     if lang == "en":
         times = t["times_one"] if n == 1 else t["times_many"].format(n=n)
-        return t["make"].format(who=who, times=times, L=layout_no)
+        return t["make"].format(who=who, times=times, L=layout_no, order="" if n == 1 else t["order"])
     if n == 1:
         times, tail = t["times_one"], "单个分格中"
     else:
         times, tail = t["times_many"], f"{n}个分格中依次出现{n}次"
     # zh word order: "…，在<Picture 2>的2个分格中依次出现2次，…" / "…，出现一次，位于<Picture 2>的单个分格中，…"
-    return t["make"].format(who=who, times=times, L=layout_no, scope_tail=tail)
+    return t["make"].format(who=who, times=times, L=layout_no, scope_tail=tail, order="" if n == 1 else t["order"])
 
 
 def sheet_prompt(
