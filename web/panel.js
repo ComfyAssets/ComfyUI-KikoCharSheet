@@ -45,6 +45,7 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
   let marked = new Set(); // ids whose cards currently show as selected
   let observer = null;
   let safeMode = true;
+  let showOnline = false; // the anime sets load from their origin sites; off until the user opts in
   let query = "";
   const filters = {};
   let shakeTimer = null;
@@ -85,15 +86,28 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
   });
   const lensBtn = lib === "pose" ? el("button", { class: "cs-btn cs-toggle cs-lens", type: "button", title: t("lens.hint") }) : null;
   const sfwBtn = el("button", { class: "cs-btn cs-toggle cs-sfw", type: "button" });
+  const hasOnline = () => items.some((item) => item.online);
+  const onlineBtn = lib === "costume" ? el("button", { class: "cs-btn cs-toggle cs-online", type: "button", hidden: true, title: t("online.hint") }) : null;
   const randomBtn = el("button", { class: "cs-btn", type: "button", text: t("random") });
   const resetBtn = el("button", { class: "cs-btn cs-btn-quiet", type: "button", text: t("reset") });
-  const filterRow = el("div", { class: "cs-filters" }, [search, ...selects.map((s) => s.select), lensBtn, sfwBtn, randomBtn, resetBtn]);
+  const filterRow = el("div", { class: "cs-filters" }, [search, ...selects.map((s) => s.select), lensBtn, onlineBtn, sfwBtn, randomBtn, resetBtn]);
 
   const confirmYes = el("button", { class: "cs-btn cs-btn-danger", type: "button", text: t("sfw.confirmYes") });
   const confirmNo = el("button", { class: "cs-btn cs-btn-primary", type: "button", text: t("sfw.confirmNo") });
   const sfwConfirm = el("div", { class: "cs-confirm", role: "alertdialog", hidden: true }, [
     el("div", { text: t("sfw.confirm") }),
     el("div", { class: "cs-actions" }, [confirmYes, confirmNo]),
+  ]);
+  const onlineYes = el("button", { class: "cs-btn cs-btn-primary", type: "button", text: t("online.confirmYes") });
+  const onlineNo = el("button", { class: "cs-btn", type: "button", text: t("online.confirmNo") });
+  const onlineConfirm = el("div", { class: "cs-confirm", role: "alertdialog", hidden: true }, [
+    el("div", { text: t("online.confirm") }),
+    el("div", { class: "cs-terms" }, [
+      el("span", { text: t("online.terms") }),
+      el("a", { href: "https://charadb-2fi.pages.dev/", target: "_blank", rel: "noopener noreferrer", text: "CharaDB" }),
+      el("a", { href: "https://ai-costume-anime-gallery.pages.dev/", target: "_blank", rel: "noopener noreferrer", text: t("source.giaAnime") }),
+    ]),
+    el("div", { class: "cs-actions" }, [onlineYes, onlineNo]),
   ]);
 
   // ---- Scroll area ----
@@ -137,7 +151,7 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
   ]);
   footer.appendChild(multi ? tray.root : pickBox);
 
-  const root = el("div", { class: `cs-panel cs-lib-${lib}`, "data-lib": lib }, [header, filterRow, sfwConfirm, scroll, footer]);
+  const root = el("div", { class: `cs-panel cs-lib-${lib}`, "data-lib": lib }, [header, filterRow, onlineConfirm, sfwConfirm, scroll, footer]);
   const fullscreen = createFullscreen(root, { onChange: updateExpandButton, snapshot: snapshotScroll, restore: restoreScroll });
 
   // Keys pressed inside the panel stay in the panel: ComfyUI's window-level keybindings only skip
@@ -182,6 +196,7 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
       itemById = new Map(items.map((item) => [item.id, item]));
       setStatus("");
       populateFilters();
+      renderOnlineButton();
       renderGrid();
       refreshSelectionUI(null);
     } catch (err) {
@@ -191,7 +206,7 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
   }
 
   function populateFilters() {
-    const visible = safeMode ? items.filter((item) => !item.nsfw) : items;
+    const visible = filterItems(items, { safeMode, showOnline });
     for (const { spec: f, select } of selects) {
       const values = filterOptions(visible, f.field);
       if (filters[f.field] && !values.includes(filters[f.field])) filters[f.field] = "";
@@ -237,7 +252,7 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
 
   function renderGrid() {
     disconnectObserver();
-    filtered = filterItems(items, { query, filters, safeMode, translate: d });
+    filtered = filterItems(items, { query, filters, safeMode, showOnline, translate: d });
     rendered = 0;
     cards.clear();
     marked = new Set();
@@ -391,6 +406,31 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
   confirmYes.addEventListener("click", () => setSafeMode(false));
   confirmNo.addEventListener("click", () => {
     sfwConfirm.hidden = true;
+  });
+
+  /** Anime sets switch (costume only), shown when the catalogue has online items. */
+  function renderOnlineButton() {
+    if (!onlineBtn) return;
+    onlineBtn.hidden = !hasOnline();
+    onlineBtn.textContent = showOnline ? t("online.on") : t("online.off");
+    onlineBtn.setAttribute("aria-pressed", showOnline ? "true" : "false");
+  }
+
+  function setShowOnline(on) {
+    showOnline = on;
+    onlineConfirm.hidden = true;
+    renderOnlineButton();
+    populateFilters();
+    renderGrid();
+  }
+
+  onlineBtn?.addEventListener("click", () => {
+    if (showOnline) setShowOnline(false);
+    else onlineConfirm.hidden = !onlineConfirm.hidden;
+  });
+  onlineYes.addEventListener("click", () => setShowOnline(true));
+  onlineNo.addEventListener("click", () => {
+    onlineConfirm.hidden = true;
   });
   lensBtn?.addEventListener("click", () => commit(setWideLens(current, !isWideLens(current))));
 

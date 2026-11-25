@@ -32,7 +32,7 @@ What is not known: the exact licence of the realistic-costume images, and whethe
 
 ## Hotlinked images
 
-The CharaDB and anime costume images (about 1,760 entries) are not copied by the setup script. The costume picker loads them from the origin sites, so they need an internet connection. Do not download, mirror or redistribute them, and do not commit them. If an origin site goes offline, those thumbnails and images stop working.
+The CharaDB and anime costume images (about 1,760 entries) are not copied by the setup script. The costume picker loads them from the origin sites, so they need an internet connection. Both sets are hidden by default; the Costume Picker's **🌐 Anime sets** button shows them after you confirm their terms. See the README's *The anime costume sets*. Do not download, mirror or redistribute them, and do not commit them. If an origin site goes offline, those thumbnails and images stop working.
 
 Only addresses listed exactly in the catalogue are fetched, with size and time limits. The picker does not fetch arbitrary URLs.
 

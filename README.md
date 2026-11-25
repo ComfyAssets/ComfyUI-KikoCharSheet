@@ -7,7 +7,7 @@ Four ComfyUI nodes that pick references for a character sheet and prepare them f
 | Node | What it does | Needs the download script |
 |---|---|---|
 | Portrait Picker (Char Sheet) | Pick a portrait from the gallery, or one of your own uploads. Outputs the image and a prompt. | Yes: portraits and their names |
-| Costume Picker (Char Sheet) | Pick a costume and a view (front, diag, side, back). Outputs the image and a prompt. | Yes: costumes and their names. The anime costumes also need internet each time |
+| Costume Picker (Char Sheet) | Pick a costume and a view (front, diag, side, back). Outputs the image and a prompt. | Yes: costumes and their names. The anime costume sets are off by default and need internet; see [The anime costume sets](#the-anime-costume-sets) |
 | Pose Picker (Char Sheet) | Pick up to 13 poses, in order. Flip any of them, and switch between normal and wide-lens pose pictures. | Yes, for the pose names and categories only. The pose pictures ship with the pack |
 | Pose Sheet Designer (Char Sheet) | Lays the poses out on one layout image and writes the prompt for it. | Yes, as it reads the same pose list |
 
@@ -17,7 +17,7 @@ All four are in the `CharSheet` category. Each picker shows a browsable panel in
 
 | Portrait Picker | Costume Picker |
 |---|---|
-| ![Portrait Picker node with the gallery panel, an upload tile and the current pick](docs/images/portrait-picker.png) | ![Costume Picker node with filters, safe mode and the footwear switch](docs/images/costume-picker.png) |
+| ![Portrait Picker node with the gallery panel, an upload tile and the current pick](docs/images/portrait-picker.png) | ![Costume Picker node showing the Chinese historical costumes, with filters, the anime sets switch and safe mode](docs/images/costume-picker.png) |
 
 | Pose Picker | Pose Sheet Designer |
 |---|---|
@@ -54,7 +54,7 @@ Some logic is adapted from the gallery project's nodes, which are MIT licensed: 
 
 `example_workflows/kiko-charsheet-one-per-pose-v2.json` is the complete version of the third way: pick a portrait, a costume and any number of poses, queue once, and get one image per pose.
 
-![The one-per-pose workflow: download, controls, the three pickers, prompt, models, generate and save groups](docs/images/workflow-one-per-pose.png)
+![The one-per-pose workflow: download, controls, the three pickers, prompt with trigger words, models with the LoRA loader, generate and save groups](docs/images/workflow-one-per-pose.png)
 
 It adds a size picker, a seed history, a LoRA loader (empty by default; the trigger words of the LoRAs you add go in front of the prompt), a note with instructions, a model download group (off by default; turn it on for the first run) and two VRAM purge steps that unload the text encoder before the image model loads and the image model before decoding. It needs these packs as well as this one: [ComfyUI-KikoTools](https://github.com/ComfyAssets/ComfyUI-KikoTools), [LoRA Manager](https://github.com/willmiao/ComfyUI-Lora-Manager), [KJNodes](https://github.com/kijai/ComfyUI-KJNodes) and [rgthree-comfy](https://github.com/rgthree/rgthree-comfy). The three `charsheet-*` workflows are the plain versions and need only this pack and ComfyUI's MiniMax H3 nodes.
 
@@ -71,6 +71,18 @@ The designer always outputs three images, filled in the order character, layout,
 The Costume Picker has an `include_footwear` switch, on by default. It adds an instruction to the costume's prompt text: wear the shoes shown in the outfit picture, or, when off, leave the shoes out. It takes effect where that text is used: connect the picker's `prompt_en` to the Pose Sheet Designer's `outfit_prompt`. The `footwear_en` and `footwear_zh` outputs hold the footwear instruction alone, for prompts you write yourself; the one-per-pose workflow uses `footwear_en`.
 
 `style` is one sentence added near the end of the prompt. The default asks for a photorealistic studio photograph. Replace it for another look (for example an illustration style), or clear it to leave the style to the model.
+
+## The anime costume sets
+
+The Costume Picker lists two anime costume sets, CharaDB (by たき AI) and ギア's anime gallery, about 1,760 outfits. They are **off by default**. The **🌐 Anime sets** button in the Costume Picker turns them on for that panel, after you confirm the terms below. They are off again each time ComfyUI loads.
+
+Why they are off by default:
+
+- **CharaDB's terms forbid what this pack makes easy.** Its images are for reference only: no redistribution, and no use for real people or minors. This pack puts an outfit on a portrait, and the portrait can be a photo of a real person you upload.
+- **The images are not downloaded, they load from the creators' sites.** Neither set is part of the download script, so every thumbnail you browse is a request to their site, which never agreed to serve this pack.
+- **ギア's anime gallery has no stated licence.** The gallery project says to follow the author's own terms.
+
+If you turn them on, follow the creators' terms, and don't download, mirror or share their images. A saved workflow that already picked an anime costume still runs with the sets off; only the gallery list hides them.
 
 ## Portrait uploads
 

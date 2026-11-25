@@ -44,3 +44,10 @@ test("filterOptions returns sorted unique non-empty values", () => {
   const list = [{ a: "b" }, { a: "a" }, { a: "b" }, { a: "" }, {}];
   assert.deepEqual(filterOptions(list, "a"), ["a", "b"]);
 });
+
+test("showOnline: false hides items loaded from their origin site", () => {
+  const list = [{ id: "SPR-1" }, { id: "charadb-1", online: true }, { id: "shisei-1", online: false }];
+  assert.deepEqual(filterItems(list, { showOnline: false }).map((i) => i.id), ["SPR-1", "shisei-1"]);
+  assert.equal(filterItems(list, { showOnline: true }).length, 3);
+  assert.equal(filterItems(list).length, 3);
+});

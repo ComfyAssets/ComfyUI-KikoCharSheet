@@ -49,6 +49,15 @@
     "confirmYes": "I am 18 or older, turn it off",
     "confirmNo": "Keep safe mode on"
   },
+  "online": {
+    "off": "🌐 Anime sets: off",
+    "on": "🌐 Anime sets: on",
+    "hint": "The anime costume sets (CharaDB and ギア · Anime) load from their creators' sites and are off by default.",
+    "confirm": "Show the anime costume sets? Their images load from the creators' sites (CharaDB and ギア · Anime) and need an internet connection. CharaDB's terms: reference use only, no redistribution, no use for real people or minors. Follow the creators' terms.",
+    "confirmYes": "I'll follow their terms, show them",
+    "confirmNo": "Keep them hidden",
+    "terms": "Their terms:"
+  },
   "lens": {
     "normal": "📷 Normal lens",
     "wide": "📷 Wide lens",

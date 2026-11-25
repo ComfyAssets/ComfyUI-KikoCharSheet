@@ -1,4 +1,4 @@
-// Pure catalogue filtering (safe mode, dropdown filters, search).
+// Pure catalogue filtering (safe mode, the online sets, dropdown filters, search).
 
 const identity = (value) => value;
 
@@ -13,12 +13,14 @@ function matchesQuery(item, needle, translate) {
  * Filter catalogue items.
  * `filters` is {field: value}; an empty or missing value means "all".
  * `query` matches id, title, `search` and translate(title), case-insensitively.
+ * `showOnline: false` hides items whose images load from their origin site (the anime sets).
  */
-export function filterItems(items, { query = "", filters = {}, safeMode = false, translate = identity } = {}) {
+export function filterItems(items, { query = "", filters = {}, safeMode = false, showOnline = true, translate = identity } = {}) {
   const needle = String(query || "").trim().toLowerCase();
   const active = Object.entries(filters || {}).filter(([, v]) => v !== "" && v != null);
   return items.filter((item) => {
     if (safeMode && item.nsfw) return false;
+    if (!showOnline && item.online) return false;
     if (active.some(([field, value]) => item[field] !== value)) return false;
     return !needle || matchesQuery(item, needle, translate);
   });
