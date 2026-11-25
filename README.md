@@ -2,6 +2,8 @@
 
 Four ComfyUI nodes that pick references for a character sheet and prepare them for MiniMax H3 Image. They work with the H3 Character Sheet Designer pack, but do not need it.
 
+**Help wanted.** This pack is replacing borrowed reference pictures with its own, and it needs Blender artists, costume makers and contributors. See [Help wanted](#help-wanted).
+
 | Node | What it does | Needs the download script |
 |---|---|---|
 | Portrait Picker (Char Sheet) | Pick a portrait from the gallery, or one of your own uploads. Outputs the image and a prompt. | Yes: portraits and their names |
@@ -73,6 +75,47 @@ The Costume Picker has an `include_footwear` switch, on by default. It adds an i
 ## Portrait uploads
 
 A portrait upload that is not already 4:5 shows a crop frame over the preview. Drag the frame to choose the area; only that area is stored, as a PNG. Costume and pose uploads are stored as they are.
+
+## Help wanted
+
+The goal is a pack that ships everything it needs, made by its contributors and free for anyone to use. The pose pictures are already there: they are this pack's own renders, in `poses/`, under CC0. The rest still comes from other people's galleries, some of it with no licence, which is why you have to run a download script. Help is welcome to finish the job.
+
+### Blender artists
+
+The pose pictures are Blender renders of a 3D figure, one per pose and camera angle. Things that need doing:
+
+- **Couple poses.** The gallery has 55 two-person poses (275 pictures) with no render yet, so the Pose Picker does not list them.
+- **More builds.** The build of the pose figure carries over into the generated person. There is one slim female figure today. Other builds, and a male figure, would each be a new set.
+- **Better poses.** Some renders do not match their pose well: hands that miss the floor, limbs that clip, awkward camera angles. Fixes to single poses are welcome.
+- **New poses** that the gallery does not have.
+- **A shareable figure and pipeline.** The current figure cannot be redistributed, so the renders cannot be rebuilt by anyone else. A freely licensed figure, with the scripts that pose and render it, would let everyone contribute poses.
+
+### Costumes
+
+The Costume Picker's realistic costumes (about 1,400) come from a gallery with no stated licence, so this pack cannot ship them. It needs its own set: outfit reference pictures, front view at least, on a plain background, with a short English description of each garment. A slim, neutral figure under the clothes is best, because the costume picture also nudges the body shape.
+
+### A pose list of our own
+
+The pose pictures ship with the pack, but the list of poses (ids, names, categories) still comes from the gallery's data. A list written for this pack would let the two pose nodes work with no download at all.
+
+### Code and translations
+
+Bug reports, fixes and features are welcome as pull requests. The interface is in English and Chinese; another language starts with a new strings file in `web/locales/`.
+
+Run the tests before you open a pull request. The Python tests need the Python of a ComfyUI install:
+
+```
+<ComfyUI>/venv/bin/python -m unittest discover -s tests -p 'test_*.py'
+npm test
+```
+
+### What you may contribute
+
+- **Only your own work.** No pictures from the galleries credited below, no tracings or edits of them, and nothing made from a model or asset whose licence forbids sharing the result.
+- **Pictures are released under CC0 1.0**, like the pose renders, so that anyone can use them. Code is MIT.
+- **Say how you made it** in the pull request: the tools, and any model or reference you used.
+
+Not sure whether something fits? Open an issue first and ask.
 
 ## Thanks and credits
 
