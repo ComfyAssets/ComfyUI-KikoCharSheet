@@ -52,11 +52,11 @@ Some logic is adapted from the gallery project's nodes, which are MIT licensed: 
 
 ### The full one-per-pose workflow
 
-`example_workflows/kiko-charsheet-one-per-pose-v1.json` is the complete version of the third way: pick a portrait, a costume and any number of poses, queue once, and get one image per pose.
+`example_workflows/kiko-charsheet-one-per-pose-v2.json` is the complete version of the third way: pick a portrait, a costume and any number of poses, queue once, and get one image per pose.
 
 ![The one-per-pose workflow: download, controls, the three pickers, prompt, models, generate and save groups](docs/images/workflow-one-per-pose.png)
 
-It adds a size picker, a seed history, a note with instructions, a model download group (off by default; turn it on for the first run) and two VRAM purge steps that unload the text encoder before the image model loads and the image model before decoding. It needs these packs as well as this one: [ComfyUI-KikoTools](https://github.com/ComfyAssets/ComfyUI-KikoTools), [KJNodes](https://github.com/kijai/ComfyUI-KJNodes) and [rgthree-comfy](https://github.com/rgthree/rgthree-comfy). The three `charsheet-*` workflows are the plain versions and need only this pack and ComfyUI's MiniMax H3 nodes.
+It adds a size picker, a seed history, a LoRA loader (empty by default; the trigger words of the LoRAs you add go in front of the prompt), a note with instructions, a model download group (off by default; turn it on for the first run) and two VRAM purge steps that unload the text encoder before the image model loads and the image model before decoding. It needs these packs as well as this one: [ComfyUI-KikoTools](https://github.com/ComfyAssets/ComfyUI-KikoTools), [LoRA Manager](https://github.com/willmiao/ComfyUI-Lora-Manager), [KJNodes](https://github.com/kijai/ComfyUI-KJNodes) and [rgthree-comfy](https://github.com/rgthree/rgthree-comfy). The three `charsheet-*` workflows are the plain versions and need only this pack and ComfyUI's MiniMax H3 nodes.
 
 All four appear in ComfyUI under Templates once the pack is installed.
 
