@@ -22,6 +22,7 @@ _LIB_FILES = {
 }
 _EXTERNAL_PREFIXES = ("charadb-", "gia-anime-", "shisei-")
 _NSFW_POSE_SYSTEMS = frozenset({"全身单人・性感系", "双人缠绵"})
+_NSFW_POSE_CATEGORIES = frozenset({"性感・大胆系", "挤胸・强调事业线系"})  # upper-body sets
 _NSFW_COSTUME_CATEGORIES = frozenset({"内衣・睡衣", "性感穿搭"})
 _COSTUME_VIEW_KEYS = ("缩略图", "预览图", "原图")
 
@@ -102,7 +103,7 @@ def select_costume_view(item: dict, view: str = "front") -> dict:
 
 def is_nsfw(lib: str, item: dict) -> bool:
     if lib == "pose":
-        return item.get("体系") in _NSFW_POSE_SYSTEMS
+        return item.get("体系") in _NSFW_POSE_SYSTEMS or item.get("分类") in _NSFW_POSE_CATEGORIES
     if lib == "costume":
         return bool(item.get("敏感")) or item.get("分类") in _NSFW_COSTUME_CATEGORIES
     return False

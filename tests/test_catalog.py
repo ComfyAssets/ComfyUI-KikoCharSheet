@@ -143,6 +143,10 @@ class CatalogTests(unittest.TestCase):
         pose = {p["id"]: p for p in self.cat.items("pose")}
         self.assertFalse(is_nsfw("pose", pose["pose-safe"]))
         self.assertTrue(is_nsfw("pose", pose["pose-nsfw"]))
+        upper = {"体系": "上半身单人"}
+        self.assertTrue(is_nsfw("pose", dict(upper, 分类="性感・大胆系")))
+        self.assertTrue(is_nsfw("pose", dict(upper, 分类="挤胸・强调事业线系")))
+        self.assertFalse(is_nsfw("pose", dict(upper, 分类="可爱系")))
         cos = {c["id"]: c for c in self.cat.items("costume")}
         self.assertFalse(is_nsfw("costume", cos["SPR-0001"]))
         self.assertTrue(is_nsfw("costume", cos["LNG-0001"]))  # category
