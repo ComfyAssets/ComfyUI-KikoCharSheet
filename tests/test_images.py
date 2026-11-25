@@ -1,4 +1,5 @@
 import io
+import shutil
 import sys
 import tempfile
 import unittest
@@ -15,6 +16,7 @@ from charsheet import images, uploads  # noqa: E402
 from charsheet.catalog import Catalog  # noqa: E402
 
 FIXTURE = REPO / "tests" / "fixtures" / "assets"
+POSES_FIXTURE = REPO / "tests" / "fixtures" / "poses"
 CHARADB_URL = "https://example.invalid/o.jpg"
 GIA_URL = "https://example.invalid/o2.jpg"
 
@@ -105,11 +107,82 @@ class ResolveItemTests(UploadEnvTestCase):
 
 
 class PoseRelPathTests(unittest.TestCase):
-    def test_depth_path(self):
-        item = {"原图": "img/pose/a/b.png"}
-        self.assertEqual(images.pose_image_rel_path(item), "img/pose/a/b.png")
-        self.assertEqual(images.pose_image_rel_path(item, True), "img/depth/pose/a/b.webp")
-        self.assertEqual(images.pose_image_rel_path({"原图": "img/depth/x.webp"}, True), "img/depth/x.webp")
+    def test_grey_is_the_default_and_has_one_candidate(self):
+        rel = "/img/pose/a/b.png"
+        self.assertEqual(images.pose_style_rels(rel), ["img/grey/pose/a/b.webp"])
+        self.assertEqual(images.pose_style_rels(rel, "grey"), ["img/grey/pose/a/b.webp"])
+        self.assertEqual(images.pose_style_rels("img/full_P001_front.png", "grey"), ["img/grey/full_P001_front.webp"])
+
+    def test_wide_falls_back_to_grey(self):
+        self.assertEqual(
+            images.pose_style_rels("img/pose/a/b.png", "grey_wide"),
+            ["img/grey_wide/pose/a/b.webp", "img/grey/pose/a/b.webp"],
+        )
+
+    def test_thumbs_are_webp(self):
+        self.assertEqual(
+            images.pose_style_rels("thumbs/pose/a.jpg", "grey_wide"),
+            ["thumbs/grey_wide/pose/a.webp", "thumbs/grey/pose/a.webp"],
+        )
+
+    def test_a_path_already_in_a_render_set_is_kept(self):
+        self.assertEqual(images.pose_style_rels("img/grey/x.webp", "grey"), ["img/grey/x.webp"])
+
+    def test_styles_from_before_the_grey_renders_mean_grey(self):
+        for old in (None, "", "line", "depth"):
+            with self.subTest(old=old):
+                self.assertEqual(images.normalize_pose_style(old), "grey")
+        self.assertEqual(images.normalize_pose_style("grey_wide"), "grey_wide")
+
+    def test_unknown_style_is_rejected(self):
+        for bad in ("clay", 3, True):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                images.normalize_pose_style(bad)
+        with self.assertRaises(ValueError):
+            images.pose_style_rels("img/a.png", "clay")
+
+
+class PoseStyleFilesTests(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.assets = Path(tmp.name) / "assets"
+        shutil.copytree(FIXTURE, self.assets)
+        self.poses = Path(tmp.name) / "poses"
+        shutil.copytree(POSES_FIXTURE, self.poses)
+        self.cat = Catalog(self.assets)
+        self.item = self.cat.find("pose", "pose-safe")
+
+    def put(self, rel, size, base=None):
+        path = (base or self.poses) / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        Image.new("RGB", size, (128, 128, 128)).save(path)
+
+    def size(self, style):
+        with images.open_item_image(self.cat, "pose", self.item, style=style) as image:
+            return image.size
+
+    def test_wide_uses_its_own_file_else_the_grey_one(self):
+        self.put("img/grey/pose/pose-safe.webp", (11, 12))
+        self.assertEqual(self.size("grey_wide"), (11, 12))
+        self.put("img/grey_wide/pose/pose-safe.webp", (21, 22))
+        self.assertEqual(self.size("grey_wide"), (21, 22))
+        self.assertEqual(self.size("grey"), (11, 12))
+        self.assertEqual(self.size(None), (11, 12))
+
+    def test_a_pose_without_a_grey_render_is_an_error(self):
+        (self.poses / "img/grey/pose/pose-safe.webp").unlink()
+        self.put("img/pose/pose-safe.png", (5, 5), self.assets)  # a gallery line drawing is never used
+        self.put("img/grey/pose/pose-safe.webp", (5, 5), self.assets)  # nor anything under assets/
+        for style in ("grey", "grey_wide"):
+            with self.subTest(style=style), self.assertRaises(FileNotFoundError):
+                self.size(style)
+
+    def test_has_pose_render_does_not_count_fallbacks(self):
+        self.assertTrue(images.has_pose_render(self.cat, self.item))
+        self.assertFalse(images.has_pose_render(self.cat, self.item, "grey_wide"))
+        self.put("img/grey_wide/pose/pose-safe.webp", (4, 4))
+        self.assertTrue(images.has_pose_render(self.cat, self.item, "grey_wide"))
 
 
 class OpenItemImageTests(UploadEnvTestCase):

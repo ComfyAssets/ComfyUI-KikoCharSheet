@@ -1,7 +1,7 @@
 // Pure helpers for the Pose Sheet designer panel (no DOM, no ComfyUI imports; inputs are never mutated).
 // The state rules mirror charsheet/sheet.py `parse_sheet_state`, but leniently: a bad field shows its
 // default instead of raising, so a broken saved value still opens the panel.
-import { parseState } from "./state.js";
+import { parseState, poseStyleOf } from "./state.js";
 
 export const POSE_NODE_CLASS = "CharSheetPose";
 export const SELECTION_INPUT = "selection";
@@ -153,7 +153,7 @@ export function executedSelection(output) {
 /** Body for POST /charsheet/sheet/preview, or null when there is nothing to lay out. */
 export function previewRequest(selection, state) {
   if (!selection || !Array.isArray(selection.ids) || !selection.ids.length) return null;
-  return { ids: [...selection.ids], flip: [...(selection.flip ?? [])], use_depth: selection.use_depth === true, state };
+  return { ids: [...selection.ids], flip: [...(selection.flip ?? [])], style: poseStyleOf(selection), state };
 }
 
 /** Values for the "W × H · N.NN MP" readout. */

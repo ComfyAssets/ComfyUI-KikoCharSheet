@@ -1,11 +1,16 @@
 // Pure `state_json` helpers for the picker panels (no DOM, never mutate their inputs).
-// Shapes: portrait {id}, costume {id, view}, pose {ids, flip, use_depth}.
+// Shapes: portrait {id}, costume {id, view}, pose {ids, flip, style}.
 import { MAX_POSES, move, remove, toggle, toggleFlip } from "./selection.js";
 
 export const COSTUME_VIEWS = ["front", "diag", "side", "back"]; // the fork's view set, as in charsheet/nodes.py
 
+// Pose render sets, as in charsheet/images.py: the grey model and its wide-lens version. States
+// saved while the gallery's line and depth images were offered are read as the default set.
+export const POSE_STYLES = ["grey", "grey_wide"];
+export const DEFAULT_POSE_STYLE = "grey";
+
 export function defaultState(lib) {
-  if (lib === "pose") return { ids: [], flip: [], use_depth: false };
+  if (lib === "pose") return { ids: [], flip: [], style: DEFAULT_POSE_STYLE };
   if (lib === "costume") return { id: "", view: "front" };
   return { id: "" };
 }
@@ -28,7 +33,7 @@ export function parseState(lib, raw) {
   const data = readObject(raw);
   if (lib === "pose") {
     const ids = strings(data.ids);
-    return { ids, flip: strings(data.flip).filter((id) => ids.includes(id)), use_depth: data.use_depth === true };
+    return { ids, flip: strings(data.flip).filter((id) => ids.includes(id)), style: poseStyleOf(data) };
   }
   const id = typeof data.id === "string" ? data.id : "";
   if (lib === "costume") return { id, view: COSTUME_VIEWS.includes(data.view) ? data.view : "front" };
@@ -37,9 +42,28 @@ export function parseState(lib, raw) {
 
 /** Canonical JSON for `state_json`, with a stable key order. */
 export function serializeState(lib, state) {
-  if (lib === "pose") return JSON.stringify({ ids: [...state.ids], flip: [...state.flip], use_depth: state.use_depth === true });
+  if (lib === "pose") {
+    return JSON.stringify({ ids: [...state.ids], flip: [...state.flip], style: poseStyleOf(state) });
+  }
   if (lib === "costume") return JSON.stringify({ id: state.id, view: state.view });
   return JSON.stringify({ id: state.id });
+}
+
+/** The render set of a pose state or selection; anything else means the default set. */
+export function poseStyleOf(state) {
+  return POSE_STYLES.includes(state?.style) ? state.style : DEFAULT_POSE_STYLE;
+}
+
+/** Switch between the normal and the wide-lens renders. */
+export function setWideLens(state, wide) {
+  return { ...state, style: wide ? "grey_wide" : DEFAULT_POSE_STYLE };
+}
+
+export const isWideLens = (state) => poseStyleOf(state) === "grey_wide";
+
+/** Whether the catalogue has any wide-lens render, i.e. whether the lens switch is worth showing. */
+export function hasWideRenders(items) {
+  return items.some((item) => item.wide === true);
 }
 
 /** Empty a portrait or costume pick (the node then uses its default item); a costume's view goes back to front. */

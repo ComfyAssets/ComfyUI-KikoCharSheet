@@ -12,6 +12,16 @@ RESIZE_MODES = ("original", "crop to size", "pad to size")
 REMOTE_LIMIT_BYTES = 10 * 1024 * 1024
 MAX_REMOTE_PIXELS = 20_000_000
 MAX_UPLOAD_PIXELS = 50_000_000
+# Pose images are this pack's own grey model renders, shipped in poses/img/<style>/ and
+# poses/thumbs/<style>/ as WebP under the pose's file name. "grey_wide" is a wide-lens set that
+# holds only the renders that differ from "grey", so it falls back to it.
+POSE_STYLES = ("grey", "grey_wide")
+DEFAULT_POSE_STYLE = "grey"
+# Values of states saved while the gallery's line and depth images were still offered.
+_LEGACY_POSE_STYLES = ("line", "depth")
+_MEDIA_ROOTS = ("img", "thumbs")
+_RENDER_SUFFIX = ".webp"
+_STYLE_ORDER = {"grey": ("grey",), "grey_wide": ("grey_wide", "grey")}
 REMOTE_SOURCES = {"charadb": {"JPEG"}, "gia-anime": {"PNG", "WEBP"}}
 _CONTENT_TYPES = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
 
@@ -32,14 +42,50 @@ def resolve_item(catalog: Catalog, lib: str, item_id: str, view: str = "front") 
     return select_costume_view(item, view) if lib == "costume" else item
 
 
-def pose_image_rel_path(item: dict, use_depth: bool = False) -> str:
-    if item.get("source") == "upload":
-        return item["原图"]
-    raw = str(item.get("原图", "")).lstrip("/")
-    if use_depth and raw.startswith("img/") and not raw.startswith("img/depth/"):
-        stem = raw[len("img/"):].rsplit(".", 1)[0]
-        return f"img/depth/{stem}.webp"
-    return raw
+def normalize_pose_style(value) -> str:
+    """A valid pose style; nothing, or a style from before the grey renders, means the default."""
+    if value is None or value == "" or value in _LEGACY_POSE_STYLES:
+        return DEFAULT_POSE_STYLE
+    if value not in POSE_STYLES:
+        raise ValueError(f"style must be one of {', '.join(POSE_STYLES)}, got {value!r}")
+    return value
+
+
+def _style_rel(clean: str, style: str) -> str:
+    """The render of the pose image ``clean`` in ``style``; other paths come back unchanged."""
+    root, _, rest = clean.partition("/")
+    if root not in _MEDIA_ROOTS or not rest or rest.split("/", 1)[0] in POSE_STYLES:
+        return clean
+    return f"{root}/{style}/{rest.rsplit('.', 1)[0]}{_RENDER_SUFFIX}"
+
+
+def pose_style_rels(rel: str, style: str = DEFAULT_POSE_STYLE) -> list[str]:
+    """Paths under ``poses/`` to try, in order, for the render or thumbnail of a pose in ``style``.
+
+    ``rel`` is the pose's path in the gallery data, which only supplies the file name.
+    """
+    clean = str(rel or "").lstrip("/")
+    return [_style_rel(clean, step) for step in _STYLE_ORDER[normalize_pose_style(style)]]
+
+
+def pose_render_path(catalog: Catalog, rel: str, style: str = DEFAULT_POSE_STYLE):
+    """The render file for a pose: the first candidate that exists; the last one's error otherwise."""
+    rels = pose_style_rels(rel, style)
+    for candidate in rels[:-1]:
+        try:
+            return catalog.pose_path(candidate)
+        except FileNotFoundError:
+            continue
+    return catalog.pose_path(rels[-1])
+
+
+def has_pose_render(catalog: Catalog, item: dict, style: str = DEFAULT_POSE_STYLE) -> bool:
+    """Whether ``style`` has its own render of this pose (fallbacks do not count)."""
+    try:
+        catalog.pose_path(pose_style_rels(str(item.get("原图", "")), style)[0])
+    except (FileNotFoundError, ValueError):
+        return False
+    return True
 
 
 def _open_upload(lib: str, item_id: str):
@@ -106,14 +152,16 @@ def _fetch_remote(catalog: Catalog, item: dict, url: str, opener=None):
     return image
 
 
-def open_item_image(catalog: Catalog, lib: str, item: dict, *, use_depth: bool = False, opener=None):
+def open_item_image(catalog: Catalog, lib: str, item: dict, *, style: str = DEFAULT_POSE_STYLE, opener=None):
     from PIL import Image
 
-    rel = pose_image_rel_path(item, use_depth) if lib == "pose" else str(item.get("原图", ""))
+    rel = str(item.get("原图", ""))
     if uploads.parse_upload_id(rel) is not None:
         return _open_upload(lib, rel)
     if rel.startswith("https://"):
         return _fetch_remote(catalog, item, rel, opener)
+    if lib == "pose":
+        return Image.open(pose_render_path(catalog, rel, style))
     return Image.open(catalog.image_path(rel))
 
 

@@ -2,12 +2,14 @@
 
 Four ComfyUI nodes that pick references for a character sheet and prepare them for MiniMax H3 Image. They work with the H3 Character Sheet Designer pack, but do not need it.
 
-| Node | What it does |
-|---|---|
-| Portrait Picker (Char Sheet) | Pick a portrait from the gallery, or one of your own uploads. Outputs the image and a prompt. |
-| Costume Picker (Char Sheet) | Pick a costume and a view (front, diag, side, back). Outputs the image and a prompt. |
-| Pose Picker (Char Sheet) | Pick up to 13 poses, in order. Flip any of them, and choose mannequin or depth images. |
-| Pose Sheet Designer (Char Sheet) | Lays the poses out on one layout image and writes the prompt for it. |
+| Node | What it does | Needs the download script |
+|---|---|---|
+| Portrait Picker (Char Sheet) | Pick a portrait from the gallery, or one of your own uploads. Outputs the image and a prompt. | Yes: portraits and their names |
+| Costume Picker (Char Sheet) | Pick a costume and a view (front, diag, side, back). Outputs the image and a prompt. | Yes: costumes and their names. The anime costumes also need internet each time |
+| Pose Picker (Char Sheet) | Pick up to 13 poses, in order. Flip any of them, and switch between normal and wide-lens pose pictures. | Yes, for the pose names and categories only. The pose pictures ship with the pack |
+| Pose Sheet Designer (Char Sheet) | Lays the poses out on one layout image and writes the prompt for it. | Yes, as it reads the same pose list |
+
+The download script is one command, `python3 scripts/setup_assets.py --download`; see [Install](#install).
 
 All four are in the `CharSheet` category. Each picker shows a browsable panel inside the node, with search, filters, safe mode, your own uploads and a full-screen view. The panel follows the ComfyUI language (English or Chinese).
 
@@ -28,7 +30,8 @@ The galleries and the idea of picking a portrait, a costume and a pose come from
 - **English throughout.** Every pose name, costume name, category, tag and hairstyle has an English translation (2,341 names, in `locales/en/data.json`). The pickers show them when ComfyUI is set to English, and the prompt outputs come in English and Chinese. The gallery project itself is in Chinese.
 - **Your own images.** Each picker has an upload tile. Your pictures are stored in ComfyUI's own `input/charsheet/` folder, never inside this pack, and appear in the picker next to the gallery items. Portrait uploads get a 4:5 crop frame you can drag.
 - **Pickers inside the node.** The gallery opens as a panel in the node itself, with search, filters, safe mode and a full-screen view. This follows the in-node panel of the H3 Character Sheet Designer; the gallery project's own ComfyUI nodes use a pop-up window.
-- **Several poses at once.** The Pose Picker takes up to 13 poses in an order you choose, with a flip switch per pose and a choice of mannequin or depth images.
+- **Several poses at once.** The Pose Picker takes up to 13 poses in an order you choose, with a flip switch per pose and a normal or wide-lens version of the pose pictures.
+- **Its own pose pictures.** Poses are shown as plain grey 3D model renders made for this pack, not the gallery's mannequin drawings. The build of the pose figure carries over into the generated person, and these renders have a slim build. They ship with the pack, in `poses/`.
 - **A pose sheet for MiniMax H3.** The Pose Sheet Designer lays the chosen poses out on one image and writes the prompt for it, so one generation gives the same character in every pose. It is modelled on the H3 Character Sheet Designer, which does this for fixed views (front, side, back) but not for free poses.
 - **Prompt controls.** A style sentence you can edit, a switch for including the footwear, and wording that tells the model to copy the outfit from the picture.
 
@@ -77,7 +80,7 @@ Thank you to ギア (@giaaibusi) for the original pose, costume and portrait gal
 
 The aim here is to make these references convenient to use inside ComfyUI with MiniMax H3: pick a face, an outfit and poses in the node, with English descriptions and prompt text you can edit.
 
-This is an independent adaptation. It is not endorsed by or affiliated with any of the creators above. It contains none of their images: you download your own copy from the gallery project, because the images are not ours to redistribute. If a creator or rights holder would like this pack, or any reference to their material, removed, I will gladly take it down.
+This is an independent adaptation. It is not endorsed by or affiliated with any of the creators above. It contains none of their images: the setup script downloads your own copy of the costumes and portraits from the gallery project, because those images are not ours to redistribute. The pose pictures in `poses/` are this pack's own renders. If a creator or rights holder would like this pack, or any reference to their material, removed, I will gladly take it down.
 
 Full credits, image terms and the reasons for the separate download: `docs/LICENSES-AND-SETUP.md`.
 
@@ -88,22 +91,16 @@ Full credits, image terms and the reasons for the separate download: `docs/LICEN
    ```
    git clone https://github.com/ComfyAssets/ComfyUI-KikoCharSheet.git kikocharsheet
    ```
-2. Get your own copy of the gallery images and data. They are not part of this pack (see the credits above). Clone the gallery project; the images come with the clone, about 1.2 GB:
+2. Download the gallery data, costumes and portraits. They are not part of this pack (see the credits above); this command fetches your own copy from the gallery project on GitHub, about 470 MB. Run it in the pack's folder. It needs git:
 
    ```
-   git clone --depth 1 https://github.com/anhao/ai-pose-gallery-zh.git
+   python3 scripts/setup_assets.py --download
    ```
 
-3. Copy them into this pack's `assets/` folder:
+   On Windows: `python scripts\setup_assets.py --download`.
 
-   ```
-   python3 scripts/setup_assets.py --from /path/to/ai-pose-gallery-zh
-   ```
-
-   On Windows, run it with the Python that runs your ComfyUI: `python scripts\setup_assets.py --from C:\path\to\ai-pose-gallery-zh`.
-
-   This copies about 1.2 GB. Use `--force` to replace an existing `assets/`. Without `assets/`, the nodes raise an error that names this script.
-4. Restart ComfyUI. The English names for poses, costumes and hairstyles ship with this pack, so there is nothing more to set up.
+   Use `--force` to replace an existing `assets/`. If you already have a clone of the gallery project, `--from /path/to/ai-pose-gallery-zh` copies from it instead. Without `assets/`, the nodes raise an error that names this script.
+3. Restart ComfyUI. The pose pictures and the English names for poses, costumes and hairstyles ship with this pack, so there is nothing more to set up.
 
 Python needs nothing beyond what ComfyUI ships. Run the Python tests with ComfyUI's Python environment, because plain `python` has no torch or Pillow: `<ComfyUI>/venv/bin/python -m unittest discover -s tests -p 'test_*.py'`. Run the JS tests with `npm test`.
 
@@ -111,4 +108,4 @@ Licences, image sources and what you may do with the images: [docs/LICENSES-AND-
 
 ## Licence
 
-The code and the English names are MIT, see [LICENSE](LICENSE). The licence does not cover any gallery image. Credits are in [Thanks and credits](#thanks-and-credits) above.
+The code and the English names are MIT, see [LICENSE](LICENSE). The pose pictures in `poses/` are this pack's own renders, released under CC0 1.0 (public domain), see [poses/LICENSE](poses/LICENSE). Code adapted from the gallery project's nodes keeps its own MIT notice, in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The licence does not cover any gallery image. Credits are in [Thanks and credits](#thanks-and-credits) above.

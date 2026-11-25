@@ -5,14 +5,16 @@ import { parseUploadId, thumbUrl, uploadThumbUrl } from "./gallery.js";
  * Thumbnail for `id` (a gallery id or `upload:<name>`); `item` is its catalogue row, if any.
  * Returns {src, external}: external URLs are used as is, all others go through api.apiURL.
  */
-export function thumbFor(lib, id, item, { view, depth } = {}) {
+export function thumbFor(lib, id, item, { view, style } = {}) {
   const uploadName = parseUploadId(id);
   if (uploadName !== null) return { src: uploadThumbUrl(lib, uploadName), external: false };
+  // A pose address always names its render set: the bare address used to serve the gallery's
+  // drawing and browsers keep that copy for a day.
+  if (lib === "pose") return { src: thumbUrl(lib, id, { style: style || "grey" }), external: false };
   if (!item) return { src: thumbUrl(lib, id), external: false };
   if (item.online) return { src: item.thumb, external: true };
   if (lib === "costume" && view && Array.isArray(item.views) && item.views.length > 1) {
     return { src: thumbUrl(lib, id, { view }), external: false };
   }
-  if (lib === "pose" && depth) return { src: thumbUrl(lib, id, { depth: true }), external: false };
   return { src: item.thumb, external: false };
 }

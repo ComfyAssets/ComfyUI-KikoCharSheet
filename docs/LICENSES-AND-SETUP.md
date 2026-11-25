@@ -2,15 +2,16 @@
 
 ## What you get and what you download
 
-- **This pack** gives you the nodes and the English names for everything in the galleries (`locales/en/data.json`). Both are in this repository.
-- **The images and gallery data are not in this repository.** You download your own copy from the gallery project and the setup script copies it into `assets/`, which is git-ignored.
+- **This pack** gives you the nodes, the English names for everything in the galleries (`locales/en/data.json`) and the pose pictures (`poses/`). All three are in this repository.
+- **The gallery's images and data are not in this repository.** The setup script downloads your own copy from the gallery project into `assets/`, which is git-ignored.
 
-Why it works this way: the pose and realistic-costume images have no stated licence, so nobody but their author may redistribute them, and the CharaDB licence forbids redistribution outright. Shipping the images with this pack would mean redistributing other people's work without permission. Downloading your own copy from the source keeps that decision, and the responsibility for how the images are used, with you.
+Why it works this way: the realistic-costume images have no stated licence, so nobody but their author may redistribute them, and the CharaDB licence forbids redistribution outright. Shipping the images with this pack would mean redistributing other people's work without permission. Downloading your own copy from the source keeps that decision, and the responsibility for how the images are used, with you.
 
 ## What is licensed how
 
 - The code in this repository is MIT. Owner: Vito Sansevero. See `LICENSE`.
 - The English names in `locales/en/data.json` are this project's translations, also MIT. The Chinese names they translate come from the gallery project's data.
+- The pose pictures in `poses/` are this project's own renders. They are dedicated to the public domain under CC0 1.0 Universal, see `poses/LICENSE`: use them for anything, no credit needed.
 - Parts of the code are adapted from the gallery project's ComfyUI nodes ([anhao/ai-pose-gallery-zh](https://github.com/anhao/ai-pose-gallery-zh), MIT, Copyright (c) 2026 Anhao): costume view selection, the safe-mode category lists and the Chinese prompt wording.
 - The gallery images are third-party reference material, under the terms in the table below. They are not under this repository's licence.
 
@@ -20,14 +21,14 @@ This information comes from the README of the gallery project ([anhao/ai-pose-ga
 
 | Library | Source | What is known |
 |---|---|---|
-| Poses (mannequin and depth) | ギア (@giaaibusi), gallery sites ai-pose-gallery.pages.dev and ai-pose-depth-gallery.pages.dev | The gallery project says the copyright belongs to the original author. It does not state a licence for the pose images. |
+| Poses | Pose names, categories and ids: the gallery project's data. Pose pictures: grey 3D model renders made for this pack. | The gallery's own pose pictures (ギア's mannequin drawings and depth images, no licence stated) are not used and the setup script does not copy them. The renders ship with this pack in `poses/`, under CC0 1.0. |
 | Realistic costumes | ギア (@giaaibusi), ai-costume-gallery.pages.dev | Same: copyright with the author, no licence stated. |
 | Portraits | ギア (@giaaibusi), ai-portrait-gallery.pages.dev | The gallery project states CC0 1.0 for the portrait gallery. |
 | Chinese historical costumes (Shisei) | Shisei / wquguru, github.com/wquguru/shisei | CC0 1.0 for the images and their data, per the gallery project's `docs/SHISEI-COSTUMES.md`. 57 outfits, 227 views. These are AI-generated references, not historical reconstructions. |
 | Anime costumes (CharaDB) | たき AI (@taki_auto), CharaDB | The CharaDB licence says: tags are CC0; images are for reference only; no redistribution; no use for real people or minors. The gallery project does not store these images. They load from the CharaDB site. |
 | Anime costumes (ギア anime) | ギア (@giaaibusi), ai-costume-anime-gallery.pages.dev ("衣装集 アニメ版") | The gallery project keeps only a metadata snapshot. Images load from the origin site. It says to follow the author's own terms and that a code licence is not an image licence. |
 
-What is not known: the exact licence of the pose and realistic-costume images, and whether the original author allows any reuse beyond viewing. Its README describes the project as a translated archive for study and says the images must not be repackaged or sold. Contact the original authors if you need more than that.
+What is not known: the exact licence of the realistic-costume images, and whether the original author allows any reuse beyond viewing. Its README describes the project as a translated archive for study and says the images must not be repackaged or sold. Contact the original authors if you need more than that.
 
 ## Hotlinked images
 
@@ -37,30 +38,45 @@ Only addresses listed exactly in the catalogue are fetched, with size and time l
 
 ## Setup
 
-First get your own copy of the gallery project (about 1.2 GB):
+One command downloads what the nodes need from the gallery project on GitHub and puts it into `assets/`. Run it in the pack's folder:
 
 ```
-git clone --depth 1 https://github.com/anhao/ai-pose-gallery-zh.git
+python3 scripts/setup_assets.py --download [--force]
 ```
 
-Then copy its images and data into this pack.
+On Windows: `python scripts\setup_assets.py --download [--force]`.
 
-Linux and macOS:
+- It fetches the gallery data, the costumes and the portraits, about 470 MB, and nothing else. The gallery's pose pictures are not downloaded.
+- It needs git. The files come straight from [anhao/ai-pose-gallery-zh](https://github.com/anhao/ai-pose-gallery-zh) to your machine; this pack does not host or pass on any of them.
+- It fetches the gallery version this pack was last checked against. `--ref HEAD` takes the newest one instead.
+- Existing assets are not overwritten unless you pass `--force`.
+
+If you already have a clone of the gallery project, copy from it instead:
 
 ```
 python3 scripts/setup_assets.py --from /path/to/ai-pose-gallery-zh [--force]
 ```
 
-Windows (from the pack's folder; use the Python that runs your ComfyUI, for example `python_embeded\python.exe` of the portable build):
+- The clone must contain `data/`, `img/` and `thumbs/`. If it does not, the script stops and says which are missing.
+- The original-size files that the gallery project's own `scripts/download.py` fetches (about 6 GB) are left out, and so are its pose pictures. The script says how many.
+
+### Pose pictures
+
+The Pose Picker does not use the gallery's pose pictures, and the setup script does not download them. It shows each pose as a grey 3D model render made for this pack. The renders ship with the pack in `poses/`, so there is nothing to set up, and the picker lists only the poses that have one.
+
+- They are Blender renders of a 3D figure, posed with the gallery's pose drawings as reference. The gallery's drawings themselves are not included.
+- The build of the figure in the pose picture carries over into the generated person, which is why the renders use a slim model.
+- There are two sets. `grey` is the standard one. `grey_wide` is a wide-lens version and holds only the renders that differ; a pose without a wide render uses the grey one. The Pose Picker's lens button switches between them.
+- Workflows saved while the mannequin and depth pictures were still offered load with the grey set.
+
+To rebuild the sets from new renders (PNG files named after the pose ids, for example `full_single_P018_front.png`), use the Python that runs your ComfyUI, because the script needs Pillow:
 
 ```
-python scripts\setup_assets.py --from C:\path\to\ai-pose-gallery-zh [--force]
+<ComfyUI>/venv/bin/python scripts/add_pose_set.py --style grey --from /path/to/renders
+<ComfyUI>/venv/bin/python scripts/add_pose_set.py --style grey_wide --from /path/to/wide-renders
 ```
 
-- The source must contain `data/`, `img/` and `thumbs/`. If it does not, the script stops and says which are missing. A clone of the gallery project has all three, with the images the nodes use (about 1.2 GB). You do not need to run its `scripts/download.py`.
-- That download script fetches the original-size files (about 6 GB more) that the gallery project keeps out of git. If you have run it, the setup script leaves those files out and says how many.
-- The script always copies. There is no symlink option. The copy is about 1.2 GB.
-- Existing assets are not overwritten unless you pass `--force`.
+It writes each render to `poses/img/<style>/` as WebP, with a small thumbnail in `poses/thumbs/<style>/`, and replaces files that are already there.
 
 Your own uploads are separate. They go into the ComfyUI input folder under `charsheet/<portrait|costume|pose>/`, never into `assets/`. Only PNG, JPEG and WebP files are accepted.
 

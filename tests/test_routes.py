@@ -26,6 +26,8 @@ class RouteTestCase(unittest.TestCase):
         self.root = Path(tmp.name)
         self.assets = self.root / "assets"
         shutil.copytree(FIXTURE, self.assets)
+        self.poses = self.root / "poses"
+        shutil.copytree(FIXTURE.parent / "poses", self.poses)
         self.input_dir = self.root / "input"
         self.input_dir.mkdir()
         self.cat = Catalog(self.assets)
@@ -36,6 +38,19 @@ class RouteTestCase(unittest.TestCase):
             patcher = mock.patch(target, value)
             patcher.start()
             self.addCleanup(patcher.stop)
+
+    def test_wide_falls_back_to_grey_and_unknown_style_is_400(self):
+        grey = (self.poses / "thumbs/grey/pose/pose-safe.webp").resolve()
+        for style in (None, "grey", "grey_wide", "line", "depth"):
+            with self.subTest(style=style):
+                self.assertEqual(routes.resolve_media("pose", "pose-safe", "thumb", style=style), (200, grey))
+        wide = self.poses / "img/grey_wide/pose/pose-safe.webp"
+        wide.parent.mkdir(parents=True)
+        Image.new("RGB", (4, 4)).save(wide)
+        self.assertEqual(routes.resolve_media("pose", "pose-safe", "image", style="grey_wide")[1], wide.resolve())
+        self.assertEqual(
+            routes.resolve_media("pose", "pose-safe", "image")[1], (self.poses / "img/grey/pose/pose-safe.webp").resolve())
+        self.assertEqual(routes.resolve_media("pose", "pose-safe", "image", style="clay")[0], 400)
 
     def put_upload(self, lib, name):
         path = uploads.upload_dir(self.input_dir, lib) / name
@@ -65,9 +80,20 @@ class CatalogTests(RouteTestCase):
     def test_pose_shape_and_nsfw(self):
         items = self.items("pose")
         self.assertEqual(set(items["pose-safe"]), {
-            "id", "title", "thumb", "nsfw", "online", "体系", "分类", "角度", "姿势名称", "search"})
+            "id", "title", "thumb", "nsfw", "online", "体系", "分类", "角度", "姿势名称", "search", "wide"})
+        self.assertFalse(items["pose-safe"]["wide"])
+        self.assertEqual(items["pose-safe"]["thumb"], "/charsheet/thumb/pose/pose-safe?style=grey")
+        path = self.poses / "img/grey_wide/pose/pose-safe.webp"
+        path.parent.mkdir(parents=True)
+        Image.new("RGB", (4, 4)).save(path)
+        self.assertTrue(self.items("pose")["pose-safe"]["wide"])
+        self.assertFalse(self.items("pose")["pose-nsfw"]["wide"])
         self.assertFalse(items["pose-safe"]["nsfw"])
         self.assertTrue(items["pose-nsfw"]["nsfw"])
+
+    def test_poses_without_a_grey_render_are_left_out(self):
+        (self.poses / "img/grey/pose/pose-nsfw.webp").unlink()
+        self.assertEqual(set(self.items("pose")), {"pose-safe"})
 
     def test_costume_local_online_and_views(self):
         items = self.items("costume")
@@ -96,7 +122,7 @@ class CatalogTests(RouteTestCase):
 class MediaTests(RouteTestCase):
     def test_thumb_and_image(self):
         status, path = routes.resolve_media("pose", "pose-safe", "thumb")
-        self.assertEqual((status, path), (200, (self.assets / "thumbs/pose/pose-safe.png").resolve()))
+        self.assertEqual((status, path), (200, (self.poses / "thumbs/grey/pose/pose-safe.webp").resolve()))
         status, path = routes.resolve_media("portrait", "por-a", "image")
         self.assertEqual((status, path), (200, (self.assets / "img/portrait/por-a.png").resolve()))
 
@@ -137,16 +163,6 @@ class MediaTests(RouteTestCase):
         for name, expected in cases.items():
             with self.subTest(name=name):
                 self.assertEqual(routes.media_content_type(Path("/x") / name), expected)
-
-    def test_depth(self):
-        self.assertEqual(routes.resolve_media("pose", "pose-safe", "thumb", depth=True)[0], 404)
-        for rel in ("thumbs/depth/pose/pose-safe.webp", "img/depth/pose/pose-safe.webp"):
-            (self.assets / rel).parent.mkdir(parents=True, exist_ok=True)
-            Image.new("RGB", (4, 4)).save(self.assets / rel)
-        status, path = routes.resolve_media("pose", "pose-safe", "thumb", depth=True)
-        self.assertEqual((status, path), (200, (self.assets / "thumbs/depth/pose/pose-safe.webp").resolve()))
-        status, path = routes.resolve_media("pose", "pose-safe", "image", depth=True)
-        self.assertEqual(path, (self.assets / "img/depth/pose/pose-safe.webp").resolve())
 
 
 class UploadRouteTests(RouteTestCase):
@@ -194,13 +210,15 @@ class PreviewTests(RouteTestCase):
         self.assertEqual(status, 200)
         self.assertTrue(payload["warnings"])
 
-    def test_flip_and_depth_accepted(self):
+    def test_flip_and_style_accepted(self):
         self.assertEqual(self.preview(flip=["pose-safe"], use_depth=False)[0], 200)
+        self.assertEqual(self.preview(style="grey_wide")[0], 200)
+        self.assertEqual(self.preview(style="clay")[0], 400)
 
     def test_bad_requests(self):
         for body in (
             {"ids": []}, {"ids": "a"}, {"ids": [1]}, {"ids": [f"p{i}" for i in range(14)]},
-            {"ids": ["pose-safe"], "flip": "x"}, {"ids": ["pose-safe"], "use_depth": "yes"},
+            {"ids": ["pose-safe"], "flip": "x"}, {"ids": ["pose-safe"], "style": "clay"},
             {"ids": ["pose-safe"], "state": {"columns": 9}}, {"ids": ["ghost"]},
         ):
             with self.subTest(body=body):

@@ -58,10 +58,23 @@ class CatalogTests(unittest.TestCase):
                 self.cat.find("costume", prefix + "zzz")
             self.assertEqual(str(cm.exception), f"unknown external-source costume id: {prefix}zzz")
 
+    def test_pose_path_reads_the_poses_folder_next_to_assets(self):
+        self.assertEqual(self.cat.poses_dir, FIXTURE.parent / "poses")
+        self.assertTrue(self.cat.pose_path("img/grey/pose/pose-safe.webp").is_file())
+        self.assertTrue(self.cat.pose_path("thumbs/grey/pose/pose-safe.webp").is_file())
+        with self.assertRaises(FileNotFoundError):
+            self.cat.pose_path("img/costume/SPR-0001.png")  # an assets file is not a pose render
+        for rel in ("../assets/img/costume/SPR-0001.png", "img/../../x", "README.md", "/etc/passwd"):
+            with self.subTest(rel=rel), self.assertRaises(ValueError):
+                self.cat.pose_path(rel)
+
+    def test_poses_dir_can_be_given(self):
+        self.assertEqual(Catalog(FIXTURE, poses_dir=FIXTURE).poses_dir, FIXTURE)
+
     def test_image_path_ok(self):
-        p = self.cat.image_path("img/pose/pose-safe.png")
+        p = self.cat.image_path("img/costume/SPR-0001.png")
         self.assertTrue(p.is_file())
-        self.assertTrue(self.cat.image_path("thumbs/pose/pose-safe.png").is_file())
+        self.assertTrue(self.cat.image_path("thumbs/costume/SPR-0001.png").is_file())
 
     def test_image_path_traversal(self):
         for rel in ("../x", "img/../../x", "data/pose-zh.json", "/etc/passwd"):
@@ -79,8 +92,8 @@ class CatalogTests(unittest.TestCase):
             os.symlink(FIXTURE / "img", assets / "img")
             os.symlink(FIXTURE / "thumbs", assets / "thumbs")
             cat = Catalog(assets)
-            self.assertTrue(cat.image_path("img/pose/pose-safe.png").is_file())
-            self.assertTrue(cat.image_path("thumbs/pose/pose-safe.png").is_file())
+            self.assertTrue(cat.image_path("img/costume/SPR-0001.png").is_file())
+            self.assertTrue(cat.image_path("thumbs/costume/SPR-0001.png").is_file())
             with self.assertRaises(ValueError):
                 cat.image_path("img/../../etc/passwd")
 

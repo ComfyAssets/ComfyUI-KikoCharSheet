@@ -195,24 +195,25 @@ test("selectionSource tells disconnected, pose and other sources apart", () => {
 
 test("previewRequest builds the route body, or null when nothing is selected", () => {
   const state = { ...SHEET_DEFAULTS, columns: 2 };
-  assert.deepEqual(previewRequest({ ids: ["a", "b"], flip: ["b"], use_depth: true }, state), {
+  assert.deepEqual(previewRequest({ ids: ["a", "b"], flip: ["b"], style: "grey_wide" }, state), {
     ids: ["a", "b"],
     flip: ["b"],
-    use_depth: true,
+    style: "grey_wide",
     state,
   });
+  assert.equal(previewRequest({ ids: ["a"], flip: [], use_depth: true }, state).style, "grey");
   assert.equal(previewRequest({ ids: [], flip: [], use_depth: false }, state), null);
   assert.equal(previewRequest(null, state), null);
 });
 
 test("executedSelection reads the node's ui.selection payload", () => {
-  const sel = { ids: ["a"], flip: [], use_depth: false };
+  const sel = { ids: ["a"], flip: [], style: "grey" };
   assert.deepEqual(executedSelection({ selection: [JSON.stringify(sel)] }), sel);
   assert.deepEqual(executedSelection({ selection: JSON.stringify(sel) }), sel);
   assert.deepEqual(executedSelection({ selection: [{ ids: ["x", 3], flip: ["x", "y"] }] }), {
     ids: ["x"],
     flip: ["x"],
-    use_depth: false,
+    style: "grey",
   });
   assert.equal(executedSelection({}), null);
   assert.equal(executedSelection(null), null);

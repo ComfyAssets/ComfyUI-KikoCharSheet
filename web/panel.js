@@ -5,7 +5,19 @@ import { filterItems, filterOptions } from "./lib/filters.js";
 import { BATCH_SIZE, nextRenderCount, parseUploadId, renderCountToInclude } from "./lib/gallery.js";
 import { MAX_POSES } from "./lib/selection.js";
 import { firstVisibleId, restoredScrollTop } from "./lib/scroll.js";
-import { clearPick, costumeViewFor, flipPose, movePose, parseState, removePose, selectableViews, togglePose } from "./lib/state.js";
+import {
+  clearPick,
+  costumeViewFor,
+  flipPose,
+  movePose,
+  parseState,
+  hasWideRenders,
+  isWideLens,
+  removePose,
+  selectableViews,
+  setWideLens,
+  togglePose,
+} from "./lib/state.js";
 import { LIBRARIES, buildCard, optionLabel, setCardSelected, thumbSrc, updateCardThumb } from "./cards.js";
 import { el, errorText, setThumbSrc, thumbBox, thumbImage } from "./dom.js";
 import { createFullscreen } from "./fullscreen.js";
@@ -42,7 +54,7 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
 
   const selectedIds = () => (multi ? current.ids : current.id ? [current.id] : []);
   const thumbOpts = (id) => {
-    if (lib === "pose") return { depth: current.use_depth };
+    if (lib === "pose") return { style: current.style };
     if (lib === "costume" && id === current.id) return { view: current.view };
     return {};
   };
@@ -71,11 +83,11 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
     });
     return { spec: f, select };
   });
-  const depthBtn = lib === "pose" ? el("button", { class: "cs-btn cs-toggle", type: "button" }) : null;
+  const lensBtn = lib === "pose" ? el("button", { class: "cs-btn cs-toggle cs-lens", type: "button", title: t("lens.hint") }) : null;
   const sfwBtn = el("button", { class: "cs-btn cs-toggle cs-sfw", type: "button" });
   const randomBtn = el("button", { class: "cs-btn", type: "button", text: t("random") });
   const resetBtn = el("button", { class: "cs-btn cs-btn-quiet", type: "button", text: t("reset") });
-  const filterRow = el("div", { class: "cs-filters" }, [search, ...selects.map((s) => s.select), depthBtn, sfwBtn, randomBtn, resetBtn]);
+  const filterRow = el("div", { class: "cs-filters" }, [search, ...selects.map((s) => s.select), lensBtn, sfwBtn, randomBtn, resetBtn]);
 
   const confirmYes = el("button", { class: "cs-btn cs-btn-danger", type: "button", text: t("sfw.confirmYes") });
   const confirmNo = el("button", { class: "cs-btn cs-btn-primary", type: "button", text: t("sfw.confirmNo") });
@@ -274,7 +286,7 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
 
   function refreshSelectionUI(previous) {
     markSelected();
-    if (previous && lib === "pose" && previous.use_depth !== current.use_depth) {
+    if (previous && lib === "pose" && previous.style !== current.style) {
       for (const [id, card] of cards) updateCardThumb(card, thumbSrc(ctx, id, itemById.get(id), thumbOpts(id)));
     }
     if (previous && lib === "costume") {
@@ -285,10 +297,16 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
     }
     renderHeader();
     renderFooter();
-    if (depthBtn) {
-      depthBtn.textContent = current.use_depth ? t("depth.on") : t("depth.off");
-      depthBtn.setAttribute("aria-pressed", current.use_depth ? "true" : "false");
-    }
+    renderLensButton();
+  }
+
+  /** Normal / wide-lens switch; shown when the catalogue has wide renders or wide is already on. */
+  function renderLensButton() {
+    if (!lensBtn) return;
+    const wide = isWideLens(current);
+    lensBtn.textContent = wide ? t("lens.wide") : t("lens.normal");
+    lensBtn.setAttribute("aria-pressed", wide ? "true" : "false");
+    lensBtn.hidden = !wide && !hasWideRenders(items);
   }
 
   function itemLabel(id) {
@@ -374,7 +392,7 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
   confirmNo.addEventListener("click", () => {
     sfwConfirm.hidden = true;
   });
-  depthBtn?.addEventListener("click", () => commit({ ...current, use_depth: !current.use_depth }));
+  lensBtn?.addEventListener("click", () => commit(setWideLens(current, !isWideLens(current))));
 
   search.addEventListener("input", () => {
     clearTimeout(searchTimer);

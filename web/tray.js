@@ -17,11 +17,11 @@ export function createTray({ ctx, itemById, onRemove, onFlip, onMove }) {
   ]);
   let dragFrom = -1;
 
-  function chip(id, index, flipped, depth) {
+  function chip(id, index, flipped, style) {
     const item = itemById(id);
     const upload = parseUploadId(id);
     const label = upload ?? (item ? d(item.title) : id);
-    const img = thumbImage(thumbSrc(ctx, id, item, { depth }), { alt: label, missingText: t("uploads.notFound"), lazy: false });
+    const img = thumbImage(thumbSrc(ctx, id, item, { style }), { alt: label, missingText: t("uploads.notFound"), lazy: false });
     const box = thumbBox(img, flipped ? "cs-mirrored" : "");
     const flipBtn = el("button", {
       class: `cs-chip-btn cs-chip-flip${flipped ? " cs-active" : ""}`,
@@ -84,7 +84,7 @@ export function createTray({ ctx, itemById, onRemove, onFlip, onMove }) {
 
   function render(state) {
     const flips = new Set(state.flip);
-    list.replaceChildren(...state.ids.map((id, i) => chip(id, i, flips.has(id), state.use_depth)));
+    list.replaceChildren(...state.ids.map((id, i) => chip(id, i, flips.has(id), state.style)));
     empty.hidden = state.ids.length > 0;
   }
 

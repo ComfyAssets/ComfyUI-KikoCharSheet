@@ -326,7 +326,7 @@ test("a non-Pose origin waits for a run, then previews ui.selection", async () =
   mock.timers.tick(300);
   await flush();
   assert.equal(s.api.calls.length, 1);
-  assert.deepEqual(s.api.calls[0].body, { ids: ["x", "y"], flip: ["y"], use_depth: true, state: s.api.calls[0].body.state });
+  assert.deepEqual(s.api.calls[0].body, { ids: ["x", "y"], flip: ["y"], style: "grey", state: s.api.calls[0].body.state });
   assert.equal(s.panel.root.byClass("cs-sheet-note").hidden, false);
   s.panel.destroy();
 });

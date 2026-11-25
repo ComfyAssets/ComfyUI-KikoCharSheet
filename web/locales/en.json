@@ -49,9 +49,10 @@
     "confirmYes": "I am 18 or older, turn it off",
     "confirmNo": "Keep safe mode on"
   },
-  "depth": {
-    "on": "🌗 Depth map",
-    "off": "🗿 Mannequin"
+  "lens": {
+    "normal": "📷 Normal lens",
+    "wide": "📷 Wide lens",
+    "hint": "Switch the pose pictures between the normal and the wide-angle renders"
   },
   "random": "🎲 Random pick",
   "reset": "Reset filters",

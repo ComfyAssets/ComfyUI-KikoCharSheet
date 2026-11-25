@@ -66,11 +66,22 @@ class PickStateTests(unittest.TestCase):
 
 class PoseStateTests(unittest.TestCase):
     def test_defaults(self):
-        self.assertEqual(nodes.parse_pose_state(""), {"ids": [], "flip": [], "use_depth": False})
+        self.assertEqual(nodes.parse_pose_state(""), {"ids": [], "flip": [], "style": "grey"})
 
     def test_values(self):
-        got = nodes.parse_pose_state('{"ids": ["a", "b"], "flip": ["b"], "use_depth": true}')
-        self.assertEqual(got, {"ids": ["a", "b"], "flip": ["b"], "use_depth": True})
+        got = nodes.parse_pose_state('{"ids": ["a", "b"], "flip": ["b"], "style": "grey_wide"}')
+        self.assertEqual(got, {"ids": ["a", "b"], "flip": ["b"], "style": "grey_wide"})
+
+    def test_states_from_before_the_grey_renders_use_grey(self):
+        for old in ('{"ids": ["a"], "use_depth": true}', '{"ids": ["a"], "use_depth": false, "style": "line"}',
+                    '{"ids": ["a"], "use_depth": true, "style": "depth"}'):
+            with self.subTest(old=old):
+                self.assertEqual(nodes.parse_pose_state(old), {"ids": ["a"], "flip": [], "style": "grey"})
+
+    def test_rejects_unknown_style(self):
+        for bad in ('{"style": "clay"}', '{"style": 3}'):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                nodes.parse_pose_state(bad)
 
     def test_thirteen_ok_fourteen_fails(self):
         nodes.parse_pose_state(json.dumps({"ids": [f"p{i}" for i in range(13)]}))
@@ -79,7 +90,7 @@ class PoseStateTests(unittest.TestCase):
         self.assertIn("13", str(cm.exception))
 
     def test_rejects_bad_shapes(self):
-        for bad in ("[]", "nope", '{"ids": "a"}', '{"ids": [1]}', '{"flip": [2]}', '{"use_depth": "yes"}'):
+        for bad in ("[]", "nope", '{"ids": "a"}', '{"ids": [1]}', '{"flip": [2]}'):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 nodes.parse_pose_state(bad)
 
@@ -171,7 +182,7 @@ class PoseNodeTests(NodeTestCase):
         self.assertEqual((len(poses), en, zh, count), (1, [""], [""], 0))
         self.assertEqual(tuple(poses[0].shape), (1, 48, 32, 3))
         self.assertTrue(torch.all(p1 == 1.0) and tuple(p1.shape) == (1, 48, 32, 3))
-        self.assertEqual(selection, {"ids": [], "flip": [], "use_depth": False})
+        self.assertEqual(selection, {"ids": [], "flip": [], "style": "grey"})
 
     def test_one_two_three_poses(self):
         for ids in (["pose-safe"], ["pose-safe", "pose-nsfw"], ["pose-safe", "pose-nsfw", "pose-safe"]):
@@ -209,7 +220,7 @@ class PoseNodeTests(NodeTestCase):
 
 
 class PoseSheetNodeTests(NodeTestCase):
-    SELECTION = {"ids": ["pose-safe", "pose-nsfw"], "flip": [], "use_depth": False}
+    SELECTION = {"ids": ["pose-safe", "pose-nsfw"], "flip": [], "style": "grey"}
 
     def run_sheet(self, selection=None, state="", **kw):
         return nodes.CharSheetPoseSheet().run(selection or self.SELECTION, state, **kw)
@@ -279,11 +290,11 @@ class PoseSheetNodeTests(NodeTestCase):
 
     def test_empty_selection_raises(self):
         with self.assertRaises(ValueError):
-            self.run_sheet({"ids": [], "flip": [], "use_depth": False})
+            self.run_sheet({"ids": [], "flip": [], "style": "grey"})
 
     def test_unknown_pose_names_it(self):
         with self.assertRaises(ValueError) as cm:
-            self.run_sheet({"ids": ["ghost"], "flip": [], "use_depth": False})
+            self.run_sheet({"ids": ["ghost"], "flip": [], "style": "grey"})
         self.assertIn("ghost", str(cm.exception))
 
     def test_bad_selection_type(self):

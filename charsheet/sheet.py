@@ -151,7 +151,7 @@ def _trim_background(img):
 
 def _load_figure(catalog, entry: dict):
     item = resolve_item(catalog, "pose", entry["id"])
-    source = open_item_image(catalog, "pose", item, use_depth=bool(entry.get("use_depth")))
+    source = open_item_image(catalog, "pose", item, style=entry.get("style"))
     try:
         flipped = fit(source, "original", 0, 0, flip=bool(entry.get("flip")))
     finally:

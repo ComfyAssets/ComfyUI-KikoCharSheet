@@ -1,4 +1,4 @@
-"""Read-only catalog of the gallery data and images under ``assets/``."""
+"""Read-only catalog of the gallery data and images under ``assets/`` and the pose renders under ``poses/``."""
 from __future__ import annotations
 
 import json
@@ -6,6 +6,8 @@ from functools import lru_cache
 from pathlib import Path
 
 ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
+POSES_DIRNAME = "poses"  # this pack's own pose renders, tracked in the repository next to assets/
+_MEDIA_ROOTS = ("img", "thumbs")
 LIBS = ("portrait", "costume", "pose")
 
 _LIB_FILES = {
@@ -29,15 +31,16 @@ class AssetsMissingError(RuntimeError):
 
 
 class Catalog:
-    def __init__(self, assets_dir: Path = ASSETS_DIR):
+    def __init__(self, assets_dir: Path = ASSETS_DIR, poses_dir: Path | None = None):
         self.assets_dir = Path(assets_dir)
+        self.poses_dir = Path(poses_dir) if poses_dir is not None else self.assets_dir.parent / POSES_DIRNAME
         self._cache: dict[str, list[dict]] = {}
 
     def _read_json(self, name: str) -> list[dict]:
         path = self.assets_dir / "data" / name
         if not path.is_file():
             raise AssetsMissingError(
-                f"Gallery data not found: {path}. Run `python3 scripts/setup_assets.py --from <path to a clone of ai-pose-gallery-zh>` first."
+                f"Gallery data not found: {path}. Run `python3 scripts/setup_assets.py --download` in the pack folder first."
             )
         with open(path, encoding="utf-8") as fh:
             return json.load(fh)
@@ -62,14 +65,23 @@ class Catalog:
         raise ValueError(f"unknown {lib} id: {clean_id}")
 
     def image_path(self, rel: str) -> Path:
-        clean = (rel or "").strip().replace("\\", "/").lstrip("/")
-        candidate = (self.assets_dir / clean).resolve()
-        roots = ((self.assets_dir / "img").resolve(), (self.assets_dir / "thumbs").resolve())
-        if not any(candidate.is_relative_to(root) for root in roots):
-            raise ValueError(f"illegal image path: {rel}")
-        if not candidate.is_file():
-            raise FileNotFoundError(f"image file not found: {clean}")
-        return candidate
+        """A downloaded gallery image under ``assets/img`` or ``assets/thumbs``."""
+        return _confined(self.assets_dir, rel)
+
+    def pose_path(self, rel: str) -> Path:
+        """One of this pack's pose renders under ``poses/img`` or ``poses/thumbs``."""
+        return _confined(self.poses_dir, rel)
+
+
+def _confined(base: Path, rel: str) -> Path:
+    clean = (rel or "").strip().replace("\\", "/").lstrip("/")
+    candidate = (base / clean).resolve()
+    roots = [(base / root).resolve() for root in _MEDIA_ROOTS]
+    if not any(candidate.is_relative_to(root) for root in roots):
+        raise ValueError(f"illegal image path: {rel}")
+    if not candidate.is_file():
+        raise FileNotFoundError(f"image file not found: {clean}")
+    return candidate
 
 
 def select_costume_view(item: dict, view: str = "front") -> dict:

@@ -115,11 +115,11 @@ export function croppedFileName(name) {
 
 // ---- Thumbnails ----
 
-/** Backend thumbnail route for a gallery item; `view` (costume) and `depth` (pose) are optional. */
-export function thumbUrl(lib, id, { view, depth } = {}) {
+/** Backend thumbnail route for a gallery item; `view` (costume) and `style` (pose) are optional. */
+export function thumbUrl(lib, id, { view, style } = {}) {
   const params = [];
   if (view) params.push(`view=${encodeURIComponent(view)}`);
-  if (depth) params.push("depth=1");
+  if (style) params.push(`style=${encodeURIComponent(style)}`);
   const query = params.length ? `?${params.join("&")}` : "";
   return `/charsheet/thumb/${lib}/${encodeURIComponent(id)}${query}`;
 }

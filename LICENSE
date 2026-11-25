@@ -21,6 +21,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 Scope of this licence: it covers the source code in this repository only. It
-does not cover any image or gallery data. This repository contains no gallery
-images; the setup script copies them into the git-ignored assets/ folder, and
-they stay under their original authors' terms. See docs/LICENSES-AND-SETUP.md.
+does not cover any image or gallery data.
+
+The pose pictures in poses/ are this project's own renders and are dedicated to
+the public domain under CC0 1.0 Universal; see poses/LICENSE.
+
+This repository contains no gallery images; the setup script downloads them
+into the git-ignored assets/ folder, and they stay under their original
+authors' terms. See docs/LICENSES-AND-SETUP.md.
+
+Code adapted from anhao/ai-pose-gallery-zh is under its own MIT licence and copyright
+notice; see THIRD_PARTY_NOTICES.md.

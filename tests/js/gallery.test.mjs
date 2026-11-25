@@ -53,8 +53,9 @@ test("thumbUrl builds the route with optional query", () => {
   assert.equal(thumbUrl("pose", "SPR-0001"), "/charsheet/thumb/pose/SPR-0001");
   assert.equal(thumbUrl("costume", "a/b 中"), "/charsheet/thumb/costume/" + encodeURIComponent("a/b 中"));
   assert.equal(thumbUrl("costume", "X", { view: "back" }), "/charsheet/thumb/costume/X?view=back");
-  assert.equal(thumbUrl("pose", "X", { depth: true }), "/charsheet/thumb/pose/X?depth=1");
-  assert.equal(thumbUrl("pose", "X", { view: "front", depth: true }), "/charsheet/thumb/pose/X?view=front&depth=1");
+  assert.equal(thumbUrl("pose", "X", { style: "grey_wide" }), "/charsheet/thumb/pose/X?style=grey_wide");
+  assert.equal(thumbUrl("pose", "X", { style: "grey" }), "/charsheet/thumb/pose/X?style=grey");
+  assert.equal(thumbUrl("pose", "X", { view: "front", style: "grey_wide" }), "/charsheet/thumb/pose/X?view=front&style=grey_wide");
 });
 
 test("cropRect gives a centred 4:5 crop and follows the frame position", async () => {

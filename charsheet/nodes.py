@@ -45,20 +45,22 @@ def parse_pick_state(raw, lib: str) -> dict:
 
 
 def normalize_selection(data: dict, *, allow_empty: bool = True) -> dict:
-    """Validate ``{"ids", "flip", "use_depth"}`` and fill in defaults."""
+    """Validate ``{"ids", "flip", "style"}`` and fill in defaults.
+
+    ``style`` names the pose render set. States saved while the gallery's line and depth images
+    were offered (``style`` "line" / "depth", or a ``use_depth`` flag) are read as the default set.
+    """
     ids = data.get("ids", [])
     flip = data.get("flip", [])
-    use_depth = data.get("use_depth", False)
     for name, value in (("ids", ids), ("flip", flip)):
         if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
             raise ValueError(f"{name} must be a list of strings")
-    if not isinstance(use_depth, bool):
-        raise ValueError(f"use_depth must be true or false, got {use_depth!r}")
+    style = images.normalize_pose_style(data.get("style"))
     if len(ids) > MAX_POSES:
         raise ValueError(f"at most {MAX_POSES} poses can be selected, got {len(ids)}")
     if not ids and not allow_empty:
         raise ValueError("select at least one pose")
-    return {"ids": list(ids), "flip": list(flip), "use_depth": use_depth}
+    return {"ids": list(ids), "flip": list(flip), "style": style}
 
 
 def parse_pose_state(raw) -> dict:
@@ -96,11 +98,11 @@ def _picker_inputs() -> dict:
     }
 
 
-def _open_fitted(lib, item_id, view, mode, width, height, *, flip=False, use_depth=False):
+def _open_fitted(lib, item_id, view, mode, width, height, *, flip=False, style=images.DEFAULT_POSE_STYLE):
     """Resolve one gallery or uploaded item and return (catalog, item, fitted PIL image)."""
     catalog = catalog_module.default_catalog()
     item = images.resolve_item(catalog, lib, item_id, view)
-    source = images.open_item_image(catalog, lib, item, use_depth=use_depth)
+    source = images.open_item_image(catalog, lib, item, style=style)
     try:
         return catalog, item, images.fit(source, mode, width, height, flip=flip)
     finally:
@@ -197,7 +199,7 @@ class CharSheetPose:
             mirrored = item_id in flipped
             catalog, item, image = _open_fitted(
                 "pose", item_id, "front", resize_mode, width, height,
-                flip=mirrored, use_depth=selection["use_depth"],
+                flip=mirrored, style=selection["style"],
             )
             tensors.append(images.to_tensor(image))
             for target, lang in ((texts_en, "en"), (texts_zh, "zh")):
@@ -257,7 +259,7 @@ class CharSheetPoseSheet:
             for lang in ("en", "zh")
         }
         entries = [
-            {"id": item_id, "flip": item_id in flipped, "use_depth": selection["use_depth"]}
+            {"id": item_id, "flip": item_id in flipped, "style": selection["style"]}
             for item_id in selection["ids"]
         ]
         plan = plan_layout(len(entries), state)

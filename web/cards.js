@@ -44,13 +44,13 @@ export function subtitle(lib, item, d) {
     .join(" · ");
 }
 
-/** Resolved thumbnail URL of `id` for the given view/depth. */
+/** Resolved thumbnail URL of `id` for the given view/style. */
 export function thumbSrc(ctx, id, item, opts) {
   return resolveSrc(ctx.api, thumbFor(ctx.lib, id, item, opts));
 }
 
 /**
- * Build one gallery card. `ctx` is {lib, api, t, d, thumbOpts(id) -> {view, depth}}.
+ * Build one gallery card. `ctx` is {lib, api, t, d, thumbOpts(id) -> {view, style}}.
  * Clicks are handled by the grid (event delegation), not per card.
  */
 export function buildCard(item, ctx) {

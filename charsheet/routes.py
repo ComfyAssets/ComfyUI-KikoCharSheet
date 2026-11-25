@@ -8,6 +8,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 from . import catalog as catalog_module
+from . import images
 from . import prompts as prompts_module
 from . import uploads
 from .catalog import AssetsMissingError, LIBS, is_nsfw, select_costume_view
@@ -31,6 +32,10 @@ _TITLE_FIELDS = {
 }
 
 
+# The bare pose address used to serve the gallery's drawing, which browsers keep for a day.
+_THUMB_QUERY = {"pose": f"?style={images.DEFAULT_POSE_STYLE}"}
+
+
 def _error(status: int, message: str):
     return status, {"error": message}
 
@@ -42,7 +47,7 @@ def _catalog_item(lib: str, item: dict) -> dict:
     out = {
         "id": item["id"],
         "title": title,
-        "thumb": thumb if online else f"/charsheet/thumb/{lib}/{quote(item['id'], safe='')}",
+        "thumb": thumb if online else f"/charsheet/thumb/{lib}/{quote(item['id'], safe='')}{_THUMB_QUERY.get(lib, '')}",
         "nsfw": is_nsfw(lib, item),
         "online": online,
     }
@@ -52,6 +57,8 @@ def _catalog_item(lib: str, item: dict) -> dict:
         out["source"] = item.get("source") or "gia"
         out["一级分类"] = item.get("一级分类") or ("二次元" if out["source"] in _ANIME_SOURCES else "现实")
         out["views"] = [view["id"] for view in item.get("views", [])]
+    if lib == "pose":
+        out["wide"] = images.has_pose_render(catalog_module.default_catalog(), item, "grey_wide")
     out["search"] = item.get("检索", "")
     return out
 
@@ -60,7 +67,10 @@ def handle_catalog(lib: str):
     if lib not in LIBS:
         return _error(400, f"unknown library: {lib}")
     try:
-        items = catalog_module.default_catalog().items(lib)
+        catalog = catalog_module.default_catalog()
+        items = catalog.items(lib)
+        if lib == "pose":  # only poses this pack has its own render of
+            items = [item for item in items if images.has_pose_render(catalog, item)]
     except AssetsMissingError as exc:
         return _error(503, str(exc))
     return 200, [_catalog_item(lib, item) for item in items]
@@ -80,15 +90,6 @@ def handle_upload_delete(lib: str, name: str):
     return 200, {"deleted": True}
 
 
-def _depth_rel(rel: str) -> str:
-    clean = rel.lstrip("/")
-    for root in ("thumbs", "img"):
-        if clean.startswith(f"{root}/") and not clean.startswith(f"{root}/depth/"):
-            stem = clean[len(root) + 1:].rsplit(".", 1)[0]
-            return f"{root}/depth/{stem}.webp"
-    return clean
-
-
 MEDIA_TYPES = {".webp": "image/webp", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
 
 
@@ -97,10 +98,17 @@ def media_content_type(path) -> str:
     return MEDIA_TYPES.get(Path(path).suffix.lower(), "application/octet-stream")
 
 
-def resolve_media(lib: str, item_id: str, kind: str, view=None, depth: bool = False):
-    """Return ``(200, Path)`` for a gallery thumbnail or full image, else ``(status, {"error": ...})``."""
+def resolve_media(lib: str, item_id: str, kind: str, view=None, style=None):
+    """Return ``(200, Path)`` for a gallery thumbnail or full image, else ``(status, {"error": ...})``.
+
+    ``style`` picks the pose render set (see ``images.POSE_STYLES``).
+    """
     if kind not in MEDIA_KINDS:
         return _error(400, f"unknown image kind: {kind}")
+    try:
+        style = images.normalize_pose_style(style)
+    except ValueError as exc:
+        return _error(400, str(exc))
     if lib not in LIBS:
         return _error(404, f"unknown library: {lib}")
     if uploads.parse_upload_id(item_id) is not None:
@@ -113,8 +121,8 @@ def resolve_media(lib: str, item_id: str, kind: str, view=None, depth: bool = Fa
         rel = str(item.get(MEDIA_KINDS[kind], ""))
         if rel.startswith("https://"):
             return _error(404, f"online-only image, load it from its source: {item_id}")
-        if depth and lib == "pose":
-            rel = _depth_rel(rel)
+        if lib == "pose":
+            return 200, images.pose_render_path(catalog, rel, style)
         return 200, catalog.image_path(rel)
     except AssetsMissingError as exc:
         return _error(503, str(exc))
@@ -146,7 +154,7 @@ def handle_sheet_preview(body):
         preview_state, target = _preview_state(state, plan)
         flipped = set(selection["flip"])
         entries = [
-            {"id": item_id, "flip": item_id in flipped, "use_depth": selection["use_depth"]}
+            {"id": item_id, "flip": item_id in flipped, "style": selection["style"]}
             for item_id in selection["ids"]
         ]
         image = render_layout(catalog_module.default_catalog(), entries, preview_state)
@@ -219,10 +227,10 @@ def register_routes() -> None:
 
     async def serve_media(request, kind):
         query = request.query
-        depth = query.get("depth", "") in ("1", "true")
         status, payload = await offload(
             lambda: resolve_media(
-                request.match_info["lib"], request.match_info["id"], kind, query.get("view"), depth
+                request.match_info["lib"], request.match_info["id"], kind, query.get("view"),
+                query.get("style") or None,
             )
         )
         if status != 200:

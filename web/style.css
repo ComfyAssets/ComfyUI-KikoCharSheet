@@ -341,6 +341,7 @@
 .cs-pick-note:empty { display: none; }
 .cs-pick-note { font-size: 12px; color: var(--cs-muted); }
 .cs-pick.cs-missing .cs-pick-note { color: var(--cs-warn); }
+.cs-lens[hidden] { display: none; }
 .cs-pick-remove { flex: none; align-self: center; }
 .cs-pick-remove[hidden] { display: none; }
 .cs-view-field { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--cs-muted); flex: none; align-self: center; }

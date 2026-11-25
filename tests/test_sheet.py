@@ -138,8 +138,8 @@ class PlanLayoutTests(unittest.TestCase):
 class RenderLayoutTests(unittest.TestCase):
     def test_fixture_poses_fill_panel_centres_and_keep_gaps_white(self):
         cat = Catalog(FIXTURE)
-        entries = [{"id": "pose-safe", "flip": False, "use_depth": False},
-                   {"id": "pose-nsfw", "flip": True, "use_depth": False}]
+        entries = [{"id": "pose-safe", "flip": False, "style": "grey"},
+                   {"id": "pose-nsfw", "flip": True, "style": "grey"}]
         st = state()
         plan = sheet.plan_layout(2, st)
         img = sheet.render_layout(cat, entries, st)
@@ -153,13 +153,13 @@ class RenderLayoutTests(unittest.TestCase):
 
     def test_lightgray_background_only_changes_the_gaps(self):
         cat = Catalog(FIXTURE)
-        entries = [{"id": "pose-safe", "flip": False, "use_depth": False}]
+        entries = [{"id": "pose-safe", "flip": False, "style": "grey"}]
         img = sheet.render_layout(cat, entries, state(background="lightgray"))
         self.assertNotEqual(img.getpixel((0, 0)), WHITE)
 
     def test_labels_mark_the_panel_corner(self):
         cat = Catalog(FIXTURE)
-        entries = [{"id": "pose-safe", "flip": False, "use_depth": False}]
+        entries = [{"id": "pose-safe", "flip": False, "style": "grey"}]
         plain = sheet.render_layout(cat, entries, state())
         labelled = sheet.render_layout(cat, entries, state(labels=True))
         x, y, w, h = sheet.plan_layout(1, state())["panels"][0]
@@ -172,18 +172,18 @@ class RenderLayoutTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             assets = Path(tmp)
             (assets / "data").mkdir()
-            (assets / "img" / "pose").mkdir(parents=True)
+            (assets / "img" / "grey" / "pose").mkdir(parents=True)
             rows = []
             for name, canvas, box in (("tall", (60, 60), (25, 5, 35, 45)), ("wide", (200, 100), (60, 30, 100, 50))):
                 im = Image.new("RGB", canvas, WHITE)
                 im.paste((0, 0, 0), box)
-                im.save(assets / "img" / "pose" / f"{name}.png")
+                im.save(assets / "img" / "grey" / "pose" / f"{name}.webp", lossless=True)
                 rows.append({"id": name, "原图": f"img/pose/{name}.png", "体系": "x", "分类": "y"})
             (assets / "data" / "pose-zh.json").write_text(json.dumps(rows), encoding="utf-8")
-            entries = [{"id": n, "flip": False, "use_depth": False} for n in ("tall", "wide")]
+            entries = [{"id": n, "flip": False, "style": "grey"} for n in ("tall", "wide")]
             st = state()
             plan = sheet.plan_layout(2, st)
-            img = sheet.render_layout(Catalog(assets), entries, st)
+            img = sheet.render_layout(Catalog(assets, poses_dir=assets), entries, st)
             pad = max(2, round(0.04 * min(plan["panels"][0][2], plan["panels"][0][3])))
             for (x, y, w, h), (fig_w, fig_h) in zip(plan["panels"], ((10, 40), (40, 20))):
                 inner = img.crop((x + 3, y + 3, x + w - 3, y + h - 3)).convert("L").point(lambda v: 255 if v < 100 else 0)
@@ -209,22 +209,22 @@ class RenderLayoutTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             assets = Path(tmp)
             (assets / "data").mkdir()
-            (assets / "img" / "pose").mkdir(parents=True)
+            (assets / "img" / "grey" / "pose").mkdir(parents=True)
             im = Image.new("RGB", (200, 200), (10, 10, 10))
             im.paste((240, 240, 240), (90, 20, 110, 180))
-            im.save(assets / "img" / "pose" / "d.png")
+            im.save(assets / "img" / "grey" / "pose" / "d.webp", lossless=True)
             rows = [{"id": "d", "原图": "img/pose/d.png", "体系": "x", "分类": "y"}]
             (assets / "data" / "pose-zh.json").write_text(json.dumps(rows), encoding="utf-8")
             st = state()
             x, y, w, h = sheet.plan_layout(1, st)["panels"][0]
-            img = sheet.render_layout(Catalog(assets), [{"id": "d"}], st)
+            img = sheet.render_layout(Catalog(assets, poses_dir=assets), [{"id": "d"}], st)
             panel = img.crop((x + 3, y + 3, x + w - 3, y + h - 3)).convert("L").point(lambda v: 255 if v > 128 and v < 250 else 0)
             box = panel.getbbox()
             self.assertGreater((box[3] - box[1]) / h, 0.85)
 
     def test_rejects_unknown_pose(self):
         with self.assertRaisesRegex(ValueError, "nope"):
-            sheet.render_layout(Catalog(FIXTURE), [{"id": "nope", "flip": False, "use_depth": False}], state())
+            sheet.render_layout(Catalog(FIXTURE), [{"id": "nope", "flip": False, "style": "grey"}], state())
 
     def test_rejects_empty_entries(self):
         with self.assertRaises(ValueError):
