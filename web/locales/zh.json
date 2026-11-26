@@ -40,7 +40,8 @@
     "gia": "ギア · 写实",
     "giaAnime": "ギア · 动漫",
     "charadb": "CharaDB",
-    "shisei": "Shisei · 中国历代"
+    "shisei": "Shisei · 中国历代",
+    "builtin": "内置 · 仅提示词"
   },
   "sfw": {
     "on": "🛡️ 安全模式 (SFW)",
@@ -69,6 +70,7 @@
     "empty": "没有匹配的内容。",
     "loading": "正在加载 {{label}}...",
     "loadError": "加载{{lib}}图库失败: {{error}}",
+    "setupNeeded": "图库文件尚未安装，因此没有可显示的内容。请在本节点包的文件夹（ComfyUI/custom_nodes/kikocharsheet）中打开终端，运行下面的命令（约 470 MB，需要 git），然后点击重试。Windows 上请用 python 代替 python3。",
     "retry": "重试",
     "online": "需要联网",
     "onlineHint": "这张图片从来源网站加载，需要联网。",
@@ -76,6 +78,7 @@
     "current": "当前选择",
     "noneSelected": "尚未选择。",
     "limit": "已达上限：最多 {{max}} 个姿势。",
+    "textOnly": "仅提示词：不发送服装图片，由提示词文字描述。",
     "defaultHint": "未选择：节点将使用默认项。"
   },
   "tray": {

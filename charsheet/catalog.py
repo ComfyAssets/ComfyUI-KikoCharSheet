@@ -25,6 +25,27 @@ _NSFW_POSE_SYSTEMS = frozenset({"全身单人・性感系", "双人缠绵"})
 _NSFW_POSE_CATEGORIES = frozenset({"性感・大胆系", "挤胸・强调事业线系"})  # upper-body sets
 _NSFW_COSTUME_CATEGORIES = frozenset({"内衣・睡衣", "性感穿搭"})
 _COSTUME_VIEW_KEYS = ("缩略图", "预览图", "原图")
+BUILTIN_DIR = Path(__file__).resolve().parent / "builtin"
+# Costumes that are this pack's own and have no picture: picking one sends its prompt text and a
+# blank placeholder image. The Chinese name and category follow the gallery data's convention and
+# are translated through locales/en/data.json like every other value.
+_BUILTIN_ITEMS = {
+    "costume": (
+        {
+            "id": "nude",
+            "source": "builtin",
+            "icon": "nude.png",
+            "服装名称": "裸体",
+            "分类": "仅提示词",
+            "敏感": True,
+            "检索": "nude naked no clothes 裸体 全裸",
+            "prompt": {
+                "en": "completely nude, wearing no clothing and no footwear",
+                "zh": "全裸，不穿任何衣物和鞋子",
+            },
+        },
+    ),
+}
 
 
 class AssetsMissingError(RuntimeError):
@@ -50,7 +71,7 @@ class Catalog:
         if lib not in _LIB_FILES:
             raise ValueError(f"unknown library: {lib}")
         if lib not in self._cache:
-            merged: list[dict] = []
+            merged: list[dict] = list(_BUILTIN_ITEMS.get(lib, ()))
             for name in _LIB_FILES[lib]:
                 merged.extend(self._read_json(name))
             self._cache[lib] = merged
@@ -82,6 +103,22 @@ def _confined(base: Path, rel: str) -> Path:
         raise ValueError(f"illegal image path: {rel}")
     if not candidate.is_file():
         raise FileNotFoundError(f"image file not found: {clean}")
+    return candidate
+
+
+def is_text_only(item: dict) -> bool:
+    """A built-in item with no picture: it is described in words only."""
+    return item.get("source") == "builtin"
+
+
+def builtin_icon_path(item: dict) -> Path:
+    """The picker icon of a built-in item, a file that ships in ``charsheet/builtin``."""
+    name = str(item.get("icon", ""))
+    candidate = (BUILTIN_DIR / name).resolve()
+    if not name or candidate.parent != BUILTIN_DIR.resolve():
+        raise ValueError(f"illegal icon path: {name}")
+    if not candidate.is_file():
+        raise FileNotFoundError(f"icon file not found: {name}")
     return candidate
 
 

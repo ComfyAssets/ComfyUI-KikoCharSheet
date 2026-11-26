@@ -81,6 +81,8 @@ def describe(lib: str, item: dict, lang: str, mirrored: bool = False, data_map=N
         raise ValueError(f"unsupported language: {lang!r}")
     if item.get("source") == "upload":
         text = _UPLOAD_TEXT[lang][lib]
+    elif isinstance(item.get("prompt"), dict):  # a built-in item carries its own wording
+        text = item["prompt"][lang]
     else:
         td = make_translator(data_map)
         text = _BUILDERS[lib](item, lang, td)
@@ -103,3 +105,36 @@ def with_footwear(text: str, include: bool, lang: str) -> str:
     if not base:
         return note[0].upper() + note[1:]
     return base + ("；" if lang == "zh" else "; ") + note
+
+
+_OUTFIT = {
+    "en": {
+        "picture": "<Picture {n}> is the outfit. Dress the character in the complete outfit from <Picture {n}>, "
+                   "copying every garment, colour and material exactly from that picture.",
+        "words": "The character is {text}.",
+        "join": " ",
+        "stop": ".",
+    },
+    "zh": {
+        "picture": "<Picture {n}>是服装。让人物穿上<Picture {n}>中的完整服装，每件衣物的款式、颜色和材质都须与该图完全一致。",
+        "words": "人物{text}。",
+        "join": "",
+        "stop": "。",
+    },
+}
+
+
+def outfit_instruction(item: dict, lang: str, picture: int, include_footwear: bool) -> str:
+    """The outfit sentences for a prompt written by hand, where the outfit is ``<Picture picture>``.
+
+    A costume with a picture is copied from that picture, with the footwear instruction after it.
+    A costume with no picture is put in words and names no picture.
+    """
+    if lang not in _OUTFIT:
+        raise ValueError(f"unsupported language: {lang!r}")
+    if isinstance(picture, bool) or not isinstance(picture, int) or picture < 1:
+        raise ValueError(f"the outfit picture number must be 1 or more, got {picture!r}")
+    t = _OUTFIT[lang]
+    if isinstance(item.get("prompt"), dict):
+        return t["words"].format(text=item["prompt"][lang].strip().rstrip(".。"))
+    return t["picture"].format(n=picture) + t["join"] + with_footwear("", include_footwear, lang) + t["stop"]

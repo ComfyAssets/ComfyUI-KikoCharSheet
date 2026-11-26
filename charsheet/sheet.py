@@ -215,6 +215,8 @@ _PROMPT = {
         "dress_many": " Dress the person in the complete outfit from <Picture {O}> in every panel, copying every garment, colour and material exactly from that picture.",
         "dress_one": " Dress the person in the complete outfit from <Picture {O}>, copying every garment, colour and material exactly from that picture.",
         "outfit": " The outfit's garments, with colours taken from <Picture {O}>: {text}.",
+        "worn_many": " The person's outfit in every panel: {text}.",
+        "worn_one": " The person's outfit: {text}.",
         "keep": " Keep the face, hairstyle, skin tone and body proportions identical in every panel.",
         "panel": " Panel {i}: {text}.",
         "end": " Full body from head to toe in each panel, white gaps between panels, plain white background, no text or numbers.",
@@ -233,6 +235,8 @@ _PROMPT = {
         "dress_many": "每个格子里都让人物穿上<Picture {O}>中的完整服装，每件衣物的款式、颜色和材质都须与该图完全一致。",
         "dress_one": "让人物穿上<Picture {O}>中的完整服装，每件衣物的款式、颜色和材质都须与该图完全一致。",
         "outfit": "服装包含（颜色以<Picture {O}>为准）：{text}。",
+        "worn_many": "每个格子中人物的着装：{text}。",
+        "worn_one": "人物的着装：{text}。",
         "keep": "每个格子中人物的面部、发型、肤色和身材比例保持完全一致。",
         "panel": "第{i}格：{text}。",
         "end": "每个格子均为从头到脚的全身像，格子之间留有白色间隙，纯白背景，不要文字或数字。",
@@ -272,8 +276,12 @@ def sheet_prompt(
     character_prompt: str = "",
     outfit_prompt: str = "",
     style: str = "",
+    outfit_text: str = "",
 ) -> str:
-    """The MiniMax H3 prompt for a pose sheet; pictures are character, layout, outfit."""
+    """The MiniMax H3 prompt for a pose sheet; pictures are character, layout, outfit.
+
+    ``outfit_text`` describes an outfit that has no picture; it is used only without an outfit picture.
+    """
     if lang not in _PROMPT:
         raise ValueError(f"unsupported language: {lang!r}")
     if isinstance(n, bool) or not isinstance(n, int) or not 1 <= n <= MAX_POSES:
@@ -294,6 +302,9 @@ def sheet_prompt(
         parts.append(t["dress_many" if many else "dress_one"].format(O=outfit_no))
         if outfit_prompt.strip():
             parts.append(t["outfit"].format(O=outfit_no, text=outfit_prompt.strip()))
+    elif outfit_text.strip():
+        worn = outfit_text.strip().rstrip(".。")
+        parts.append(t["worn_many" if many else "worn_one"].format(text=worn))
     parts.append(t["keep"])
     for index, text in enumerate(pose_texts, start=1):
         parts.append(t["panel"].format(i=index, text=text.strip().rstrip(".。")))

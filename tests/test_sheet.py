@@ -342,3 +342,24 @@ class SheetPromptTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OutfitInWordsTests(unittest.TestCase):
+    texts = ["standing", "sitting"]
+
+    def test_english_outfit_text_without_a_picture(self):
+        got = sheet.sheet_prompt(2, True, False, self.texts, "en", outfit_text="completely nude")
+        self.assertIn(" The person's outfit in every panel: completely nude.", got)
+        self.assertNotIn("<Picture 3>", got)
+
+    def test_single_panel_and_chinese(self):
+        got = sheet.sheet_prompt(1, True, False, ["standing"], "en", outfit_text="completely nude.")
+        self.assertIn(" The person's outfit: completely nude.", got)
+        got = sheet.sheet_prompt(2, True, False, self.texts, "zh", outfit_text="全裸")
+        self.assertIn("每个格子中人物的着装：全裸。", got)
+
+    def test_it_is_ignored_when_there_is_an_outfit_picture_or_no_text(self):
+        with_picture = sheet.sheet_prompt(2, True, True, self.texts, "en", outfit_text="completely nude")
+        self.assertEqual(with_picture, sheet.sheet_prompt(2, True, True, self.texts, "en"))
+        self.assertEqual(sheet.sheet_prompt(2, True, False, self.texts, "en", outfit_text="  "),
+                         sheet.sheet_prompt(2, True, False, self.texts, "en"))

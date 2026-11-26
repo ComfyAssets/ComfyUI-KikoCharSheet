@@ -40,7 +40,8 @@
     "gia": "ギア · Realistic",
     "giaAnime": "ギア · Anime",
     "charadb": "CharaDB",
-    "shisei": "Shisei · Chinese dynasties"
+    "shisei": "Shisei · Chinese dynasties",
+    "builtin": "Built-in · prompt only"
   },
   "sfw": {
     "on": "🛡️ Safe mode (SFW)",
@@ -69,6 +70,7 @@
     "empty": "No matching items.",
     "loading": "Loading {{label}}...",
     "loadError": "Failed to load the {{lib}} library: {{error}}",
+    "setupNeeded": "The gallery files are not installed yet, so there is nothing to show. Open a terminal in this pack's folder (ComfyUI/custom_nodes/kikocharsheet), run the command below (about 470 MB, needs git), then press Retry. On Windows use python instead of python3.",
     "retry": "Retry",
     "online": "Needs internet",
     "onlineHint": "This image is loaded from its origin site and needs an internet connection.",
@@ -76,6 +78,7 @@
     "current": "Current pick",
     "noneSelected": "Nothing selected yet.",
     "limit": "Limit reached: at most {{max}} poses.",
+    "textOnly": "Prompt only: no outfit picture is sent, the prompt text describes it.",
     "defaultHint": "Nothing picked: the node uses its default item."
   },
   "tray": {

@@ -109,3 +109,48 @@ class FootwearTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TextOnlyCostumeTests(unittest.TestCase):
+    def test_a_builtin_costume_uses_its_own_text(self):
+        item = {"id": "nude", "source": "builtin", "prompt": {"en": "completely nude", "zh": "全裸"}}
+        self.assertEqual(prompts.describe("costume", item, "en"), "completely nude")
+        self.assertEqual(prompts.describe("costume", item, "zh"), "全裸")
+
+    def test_the_names_have_english(self):
+        td = prompts.make_translator()
+        self.assertEqual((td("裸体"), td("仅提示词")), ("Nude", "Prompt only"))
+
+
+class OutfitInstructionTests(unittest.TestCase):
+    PICTURE = {"id": "SPR-0001", "服装名称": "连衣裙"}
+    NUDE = {"id": "nude", "source": "builtin", "prompt": {"en": "completely nude, wearing no clothing", "zh": "全裸"}}
+
+    def test_a_picture_costume_points_at_its_picture(self):
+        self.assertEqual(
+            prompts.outfit_instruction(self.PICTURE, "en", 2, True),
+            "<Picture 2> is the outfit. Dress the character in the complete outfit from <Picture 2>, copying every "
+            "garment, colour and material exactly from that picture. Include the footwear shown in the outfit picture, "
+            "worn on both feet.",
+        )
+        self.assertTrue(prompts.outfit_instruction(self.PICTURE, "en", 3, False).endswith(
+            "from <Picture 3>, copying every garment, colour and material exactly from that picture. "
+            "Leave out the footwear, the person wears no shoes."))
+        self.assertEqual(
+            prompts.outfit_instruction(self.PICTURE, "zh", 2, True),
+            "<Picture 2>是服装。让人物穿上<Picture 2>中的完整服装，每件衣物的款式、颜色和材质都须与该图完全一致。"
+            "包含服装图中的鞋子，双脚都要穿上。",
+        )
+
+    def test_a_text_only_costume_is_put_in_words_with_no_picture_named(self):
+        for footwear in (True, False):
+            self.assertEqual(prompts.outfit_instruction(self.NUDE, "en", 2, footwear),
+                             "The character is completely nude, wearing no clothing.")
+        self.assertEqual(prompts.outfit_instruction(self.NUDE, "zh", 2, True), "人物全裸。")
+
+    def test_bad_arguments(self):
+        with self.assertRaises(ValueError):
+            prompts.outfit_instruction(self.PICTURE, "fr", 2, True)
+        for bad in (0, -1, True, "2"):
+            with self.assertRaises(ValueError):
+                prompts.outfit_instruction(self.PICTURE, "en", bad, True)

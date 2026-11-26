@@ -12,8 +12,10 @@ from charsheet.catalog import (  # noqa: E402
     LIBS,
     AssetsMissingError,
     Catalog,
+    builtin_icon_path,
     default_catalog,
     is_nsfw,
+    is_text_only,
     select_costume_view,
 )
 
@@ -31,11 +33,11 @@ class CatalogTests(unittest.TestCase):
     def test_items_counts(self):
         self.assertEqual(len(self.cat.items("pose")), 2)
         self.assertEqual(len(self.cat.items("portrait")), 2)
-        self.assertEqual(len(self.cat.items("costume")), 5)
+        self.assertEqual(len(self.cat.items("costume")), 6)  # five gallery fixtures and the built-in one
 
     def test_costume_merge_order(self):
         ids = [c["id"] for c in self.cat.items("costume")]
-        self.assertEqual(ids, ["SPR-0001", "LNG-0001", "shisei-C001", "charadb-1", "gia-anime-1"])
+        self.assertEqual(ids, ["nude", "SPR-0001", "LNG-0001", "shisei-C001", "charadb-1", "gia-anime-1"])
 
     def test_items_cached_per_instance(self):
         self.assertIs(self.cat.items("pose"), self.cat.items("pose"))
@@ -159,3 +161,26 @@ class CatalogTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BuiltinCostumeTests(unittest.TestCase):
+    def setUp(self):
+        self.cat = Catalog(FIXTURE)
+
+    def test_nude_is_listed_first_and_is_adult(self):
+        first = self.cat.items("costume")[0]
+        self.assertEqual((first["id"], first["source"]), ("nude", "builtin"))
+        self.assertIs(self.cat.find("costume", "nude"), first)
+        self.assertTrue(is_nsfw("costume", first))
+        self.assertTrue(is_text_only(first))
+        self.assertFalse(is_text_only(self.cat.find("costume", "SPR-0001")))
+
+    def test_it_is_a_costume_only(self):
+        for lib in ("portrait", "pose"):
+            with self.assertRaises(ValueError):
+                self.cat.find(lib, "nude")
+
+    def test_icon_ships_with_the_pack(self):
+        self.assertTrue(builtin_icon_path(self.cat.find("costume", "nude")).is_file())
+        with self.assertRaises(ValueError):
+            builtin_icon_path({"id": "x", "icon": "../catalog.py"})

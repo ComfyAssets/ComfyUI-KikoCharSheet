@@ -2,7 +2,7 @@
 import { thumbFor } from "./lib/thumbs.js";
 import { el, resolveSrc, setThumbSrc, thumbBox, thumbImage } from "./dom.js";
 
-const SOURCE_LABELS = { gia: "source.gia", "gia-anime": "source.giaAnime", charadb: "source.charadb", shisei: "source.shisei" };
+const SOURCE_LABELS = { gia: "source.gia", "gia-anime": "source.giaAnime", charadb: "source.charadb", shisei: "source.shisei", builtin: "source.builtin" };
 
 /** Filter selects (field, label key, "all" key) and card subtitle fields per library. */
 export const LIBRARIES = {

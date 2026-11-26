@@ -13,7 +13,8 @@ DEFAULT_IDS = {"portrait": "f71f980dde3", "costume": "SPR-0001"}
 COSTUME_VIEWS = ("front", "diag", "side", "back")  # the fork's view set
 DEFAULT_RESIZE_MODE = "crop to size"
 DEFAULT_WIDTH, DEFAULT_HEIGHT = 1024, 1280
-PLACEHOLDER_SIZE = 64
+PLACEHOLDER_SIZE = images.PLACEHOLDER_SIZE
+DEFAULT_OUTFIT_PICTURE = 2  # portrait, costume, pose: the order of the one-per-pose workflows
 
 
 def _load_object(raw, what: str) -> dict:
@@ -102,6 +103,8 @@ def _open_fitted(lib, item_id, view, mode, width, height, *, flip=False, style=i
     """Resolve one gallery or uploaded item and return (catalog, item, fitted PIL image)."""
     catalog = catalog_module.default_catalog()
     item = images.resolve_item(catalog, lib, item_id, view)
+    if catalog_module.is_text_only(item):  # no picture: the prompt text stands in for it
+        return catalog, item, images.blank(PLACEHOLDER_SIZE, PLACEHOLDER_SIZE)
     source = images.open_item_image(catalog, lib, item, style=style)
     try:
         return catalog, item, images.fit(source, mode, width, height, flip=flip)
@@ -131,13 +134,17 @@ class _PickerNode:
         except ValueError:
             return ""
 
-    def run(self, state_json, resize_mode, width, height):
+    def _pick(self, state_json, resize_mode, width, height):
+        """The picked item and the node's four common outputs."""
         state = parse_pick_state(state_json, self.LIB)
         catalog, item, image = _open_fitted(
             self.LIB, state["id"], state.get("view", "front"), resize_mode, width, height
         )
         describe = lambda lang: prompts.describe(self.LIB, item, lang)  # noqa: E731
-        return (images.to_tensor(image), describe("en"), describe("zh"), state["id"])
+        return item, (images.to_tensor(image), describe("en"), describe("zh"), state["id"])
+
+    def run(self, state_json, resize_mode, width, height):
+        return self._pick(state_json, resize_mode, width, height)[1]
 
 
 class CharSheetPortrait(_PickerNode):
@@ -147,17 +154,28 @@ class CharSheetPortrait(_PickerNode):
 class CharSheetCostume(_PickerNode):
     LIB = "costume"
     # The footwear outputs carry only the footwear instruction, for prompts that leave the garment list out.
-    RETURN_TYPES = _PickerNode.RETURN_TYPES + ("STRING", "STRING")
-    RETURN_NAMES = _PickerNode.RETURN_NAMES + ("footwear_en", "footwear_zh")
+    # The outfit outputs are whole sentences for such a prompt: they name the outfit picture, or, for a
+    # costume with no picture, describe the outfit in words.
+    RETURN_TYPES = _PickerNode.RETURN_TYPES + ("STRING", "STRING", "STRING", "STRING")
+    RETURN_NAMES = _PickerNode.RETURN_NAMES + ("footwear_en", "footwear_zh", "outfit_en", "outfit_zh")
 
     @classmethod
     def INPUT_TYPES(cls):
         inputs = _picker_inputs()
-        inputs["optional"] = {"include_footwear": ("BOOLEAN", {"default": True})}
+        inputs["optional"] = {
+            "include_footwear": ("BOOLEAN", {"default": True}),
+            "outfit_picture": ("INT", {
+                "default": DEFAULT_OUTFIT_PICTURE, "min": 1, "max": 9,
+                "tooltip": "Which <Picture n> the costume image is in your prompt. Used by outfit_en and outfit_zh.",
+            }),
+        }
         return inputs
 
-    def run(self, state_json, resize_mode, width, height, include_footwear=True):
-        image, prompt_en, prompt_zh, item_id = super().run(state_json, resize_mode, width, height)
+    def run(self, state_json, resize_mode, width, height, include_footwear=True, outfit_picture=DEFAULT_OUTFIT_PICTURE):
+        item, (image, prompt_en, prompt_zh, item_id) = self._pick(state_json, resize_mode, width, height)
+        outfit = tuple(prompts.outfit_instruction(item, lang, outfit_picture, include_footwear) for lang in ("en", "zh"))
+        if catalog_module.is_text_only(item):  # its text already covers footwear; there is no picture to copy shoes from
+            return (image, prompt_en, prompt_zh, item_id, "", "", *outfit)
         return (
             image,
             prompts.with_footwear(prompt_en, include_footwear, "en"),
@@ -165,6 +183,7 @@ class CharSheetCostume(_PickerNode):
             item_id,
             prompts.with_footwear("", include_footwear, "en"),
             prompts.with_footwear("", include_footwear, "zh"),
+            *outfit,
         )
 
 
@@ -265,6 +284,10 @@ class CharSheetPoseSheet:
         plan = plan_layout(len(entries), state)
         layout = images.to_tensor(render_layout(catalog, entries, state))
 
+        # A blank placeholder is what the Costume Picker sends for a costume that is text only.
+        outfit_text = ""
+        if images.is_placeholder(outfit_image):
+            outfit_image, outfit_text = None, outfit_prompt or ""
         has_character, has_outfit = character_image is not None, outfit_image is not None
         pictures = [p for p in (character_image, layout, outfit_image) if p is not None]
         placeholder = images.to_tensor(images.blank(PLACEHOLDER_SIZE, PLACEHOLDER_SIZE))
@@ -274,7 +297,7 @@ class CharSheetPoseSheet:
             return sheet_prompt(
                 len(entries), has_character, has_outfit, texts[lang], lang,
                 character_prompt=character_prompt or "", outfit_prompt=outfit_prompt or "",
-                style=style or "",
+                style=style or "", outfit_text=outfit_text,
             )
 
         result = (

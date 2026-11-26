@@ -21,6 +21,7 @@ DEFAULT_POSE_STYLE = "grey"
 _LEGACY_POSE_STYLES = ("line", "depth")
 _MEDIA_ROOTS = ("img", "thumbs")
 _RENDER_SUFFIX = ".webp"
+PLACEHOLDER_SIZE = 64  # side of the blank image a node sends where it has no picture
 _STYLE_ORDER = {"grey": ("grey",), "grey_wide": ("grey_wide", "grey")}
 REMOTE_SOURCES = {"charadb": {"JPEG"}, "gia-anime": {"PNG", "WEBP"}}
 _CONTENT_TYPES = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
@@ -187,6 +188,14 @@ def to_tensor(img):
 
     arr = np.asarray(img.convert("RGB"), dtype=np.float32) / 255.0
     return torch.from_numpy(arr).unsqueeze(0)
+
+
+def is_placeholder(tensor) -> bool:
+    """True for the blank white ``PLACEHOLDER_SIZE`` square that stands for "no picture"."""
+    shape = tuple(getattr(tensor, "shape", ()))
+    if shape != (1, PLACEHOLDER_SIZE, PLACEHOLDER_SIZE, 3):
+        return False
+    return bool((tensor == 1.0).all())
 
 
 def blank(width: int, height: int):

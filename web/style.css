@@ -135,6 +135,7 @@
   flex-shrink: 0;
 }
 .cs-error-text { color: #ffb4a2; }
+.cs-command { flex-basis: 100%; user-select: all; padding: 6px 8px; border-radius: 4px; background: rgba(0, 0, 0, 0.35); color: #fff; font-family: monospace; }
 .cs-warning-text { color: var(--cs-warn); margin-top: 6px; }
 
 /* ---- Scroll area and grid ---- */

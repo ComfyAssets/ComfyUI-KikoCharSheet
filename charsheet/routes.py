@@ -11,7 +11,7 @@ from . import catalog as catalog_module
 from . import images
 from . import prompts as prompts_module
 from . import uploads
-from .catalog import AssetsMissingError, LIBS, is_nsfw, select_costume_view
+from .catalog import AssetsMissingError, LIBS, builtin_icon_path, is_nsfw, is_text_only, select_costume_view
 from .nodes import normalize_selection
 from .sheet import MIN_SIDE, parse_sheet_state, plan_layout, render_layout
 
@@ -118,6 +118,8 @@ def resolve_media(lib: str, item_id: str, kind: str, view=None, style=None):
         item = catalog.find(lib, item_id)
         if lib == "costume":
             item = select_costume_view(item, view or "front")
+        if is_text_only(item):
+            return 200, builtin_icon_path(item)
         rel = str(item.get(MEDIA_KINDS[kind], ""))
         if rel.startswith("https://"):
             return _error(404, f"online-only image, load it from its source: {item_id}")

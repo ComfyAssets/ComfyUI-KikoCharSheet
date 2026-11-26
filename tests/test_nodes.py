@@ -11,7 +11,7 @@ sys.path.insert(0, str(REPO))
 import torch  # noqa: E402
 from PIL import Image  # noqa: E402
 
-from charsheet import nodes, uploads  # noqa: E402
+from charsheet import images, nodes, uploads  # noqa: E402
 from charsheet.catalog import Catalog  # noqa: E402
 from charsheet.sheet import plan_layout, parse_sheet_state, sheet_prompt  # noqa: E402
 
@@ -125,10 +125,10 @@ class PickerNodeTests(NodeTestCase):
         self.assertTrue(nodes.CharSheetCostume.INPUT_TYPES()["optional"]["include_footwear"][1]["default"])
         self.assertNotIn("optional", nodes.CharSheetPortrait.INPUT_TYPES())
         self.assertEqual(nodes.CharSheetCostume.RETURN_NAMES[:4], nodes.CharSheetPortrait.RETURN_NAMES)
-        self.assertEqual(nodes.CharSheetCostume.RETURN_NAMES[4:], ("footwear_en", "footwear_zh"))
-        self.assertEqual(node.run("", "original", 10, 10)[4:],
+        self.assertEqual(nodes.CharSheetCostume.RETURN_NAMES[4:6], ("footwear_en", "footwear_zh"))
+        self.assertEqual(node.run("", "original", 10, 10)[4:6],
                          ("Include the footwear shown in the outfit picture, worn on both feet", "包含服装图中的鞋子，双脚都要穿上"))
-        self.assertEqual(node.run("", "original", 10, 10, include_footwear=False)[4:],
+        self.assertEqual(node.run("", "original", 10, 10, include_footwear=False)[4:6],
                          ("Leave out the footwear, the person wears no shoes", "不要鞋子，人物不穿鞋"))
         _, en, zh, _ = node.run("", "original", 10, 10)[:4]
         self.assertTrue(en.lower().endswith("include the footwear shown in the outfit picture, worn on both feet"))
@@ -331,3 +331,65 @@ class RegistrationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TextOnlyCostumeNodeTests(NodeTestCase):
+    NUDE = '{"id": "nude", "view": "front"}'
+
+    def test_the_picker_sends_a_blank_placeholder_and_the_text(self):
+        out = nodes.CharSheetCostume().run(self.NUDE, "crop to size", 64, 80)
+        image, en, zh, item_id, shoes_en, shoes_zh, outfit_en, outfit_zh = out
+        self.assertEqual(tuple(image.shape), (1, 64, 64, 3))
+        self.assertTrue(torch.all(image == 1.0))
+        self.assertTrue(images.is_placeholder(image))
+        self.assertEqual(item_id, "nude")
+        self.assertEqual(en, "completely nude, wearing no clothing and no footwear")
+        self.assertEqual(zh, "全裸，不穿任何衣物和鞋子")
+        self.assertEqual((shoes_en, shoes_zh), ("", ""))  # there is no outfit picture to take shoes from
+        self.assertEqual(outfit_en, "The character is completely nude, wearing no clothing and no footwear.")
+        self.assertEqual(outfit_zh, "人物全裸，不穿任何衣物和鞋子。")
+
+    def test_footwear_switch_does_not_change_it(self):
+        node = nodes.CharSheetCostume()
+        on = node.run(self.NUDE, "original", 10, 10)[1:]
+        off = node.run(self.NUDE, "original", 10, 10, include_footwear=False)[1:]
+        self.assertEqual(on, off)
+
+    def test_a_picture_costume_gets_the_outfit_sentence_for_its_picture_number(self):
+        node = nodes.CharSheetCostume()
+        self.assertEqual(nodes.CharSheetCostume.RETURN_NAMES[6:], ("outfit_en", "outfit_zh"))
+        self.assertEqual(nodes.CharSheetCostume.INPUT_TYPES()["optional"]["outfit_picture"][1]["default"], 2)
+        outfit_en = node.run("", "original", 10, 10)[6]
+        self.assertTrue(outfit_en.startswith("<Picture 2> is the outfit. Dress the character in the complete outfit from <Picture 2>,"))
+        self.assertTrue(outfit_en.endswith("Include the footwear shown in the outfit picture, worn on both feet."))
+        third = node.run("", "original", 10, 10, include_footwear=False, outfit_picture=3)
+        self.assertIn("<Picture 3> is the outfit.", third[6])
+        self.assertTrue(third[6].endswith("Leave out the footwear, the person wears no shoes."))
+        self.assertIn("<Picture 3>是服装。", third[7])
+
+    def test_placeholder_detection(self):
+        self.assertFalse(images.is_placeholder(None))
+        self.assertFalse(images.is_placeholder(torch.ones((1, 8, 8, 3))))
+        self.assertFalse(images.is_placeholder(torch.full((1, 64, 64, 3), 0.5)))
+        self.assertTrue(images.is_placeholder(torch.ones((1, 64, 64, 3))))
+
+
+class TextOnlyOutfitSheetTests(NodeTestCase):
+    SELECTION = {"ids": ["pose-safe", "pose-nsfw"], "flip": [], "style": "grey"}
+
+    def test_a_placeholder_outfit_is_described_in_words_not_sent_as_a_picture(self):
+        blank = torch.ones((1, 64, 64, 3))
+        char = torch.full((1, 8, 8, 3), 0.25)
+        out = nodes.CharSheetPoseSheet().run(
+            self.SELECTION, "", character_image=char, outfit_image=blank, outfit_prompt="completely nude"
+        )["result"]
+        prompt, prompt_zh, _, _, layout, i1, i2, i3, count = out
+        self.assertEqual(count, 2)
+        self.assertTrue(torch.equal(i1, char) and torch.equal(i2, layout))
+        self.assertIn("The person's outfit in every panel: completely nude.", prompt)
+        self.assertNotIn("<Picture 3>", prompt)
+        self.assertIn("着装：completely nude。", prompt_zh)
+
+    def test_outfit_text_alone_is_still_left_out(self):
+        out = nodes.CharSheetPoseSheet().run(self.SELECTION, "", outfit_prompt="coat")["result"]
+        self.assertNotIn("coat", out[0])

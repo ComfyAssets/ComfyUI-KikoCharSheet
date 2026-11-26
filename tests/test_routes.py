@@ -269,3 +269,21 @@ class RegisterTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BuiltinCostumeRouteTests(RouteTestCase):
+    def test_catalogue_row(self):
+        status, payload = routes.handle_catalog("costume")
+        self.assertEqual((status, payload[0]["id"]), (200, "nude"))
+        nude = payload[0]
+        self.assertEqual(nude["thumb"], "/charsheet/thumb/costume/nude")
+        self.assertEqual((nude["source"], nude["title"], nude["分类"]), ("builtin", "裸体", "仅提示词"))
+        self.assertTrue(nude["nsfw"])
+        self.assertFalse(nude["online"])
+        self.assertEqual(nude["views"], [])
+
+    def test_thumb_and_image_are_the_icon(self):
+        for kind in ("thumb", "image"):
+            status, path = routes.resolve_media("costume", "nude", kind)
+            self.assertEqual((status, path.name), (200, "nude.png"))
+        self.assertEqual(routes.resolve_media("costume", "nude", "thumb", view="back")[0], 404)

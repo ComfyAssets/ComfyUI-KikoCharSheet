@@ -1,6 +1,6 @@
 // The shared in-node picker panel (Portrait, Costume, Pose). Builds its DOM once; selection and
 // thumbnail changes update cards in place, and only filter changes rebuild the batched grid.
-import { getCatalog } from "./lib/catalog.js";
+import { SETUP_COMMAND, getCatalog, isTextOnly, needsSetup } from "./lib/catalog.js";
 import { filterItems, filterOptions } from "./lib/filters.js";
 import { BATCH_SIZE, nextRenderCount, parseUploadId, renderCountToInclude } from "./lib/gallery.js";
 import { MAX_POSES } from "./lib/selection.js";
@@ -115,7 +115,8 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
   const status = el("div", { class: "cs-status", hidden: true });
   const grid = el("div", { class: "cs-grid cs-gallery", role: "list" });
   const sentinel = el("div", { class: "cs-sentinel", "aria-hidden": "true" });
-  const scroll = el("div", { class: "cs-scroll" }, [uploadsBox, status, grid, sentinel]);
+  // The status comes first, so a load or setup message is never hidden below the uploads.
+  const scroll = el("div", { class: "cs-scroll" }, [status, uploadsBox, grid, sentinel]);
 
   // ---- Footer ----
   const footer = el("div", { class: "cs-footer" });
@@ -177,12 +178,13 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
   });
 
   // ---- Catalogue and grid ----
-  function setStatus(text, { error = false, retry = false } = {}) {
+  function setStatus(text, { error = false, retry = false, command = "" } = {}) {
     status.replaceChildren();
     status.hidden = !text;
     status.classList.toggle("cs-error-text", error);
     if (!text) return;
     status.appendChild(el("span", { text }));
+    if (command) status.appendChild(el("code", { class: "cs-command", text: command }));
     if (retry) status.appendChild(el("button", { class: "cs-btn", type: "button", text: t("state.retry"), onclick: loadItems }));
   }
 
@@ -201,7 +203,8 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
       refreshSelectionUI(null);
     } catch (err) {
       if (destroyed || generation !== loadGeneration) return;
-      setStatus(t("state.loadError", { lib: t(`panel.${lib}`), error: errorText(err) }), { error: true, retry: true });
+      if (needsSetup(err)) setStatus(t("state.setupNeeded"), { error: true, retry: true, command: SETUP_COMMAND });
+      else setStatus(t("state.loadError", { lib: t(`panel.${lib}`), error: errorText(err) }), { error: true, retry: true });
     }
   }
 
@@ -356,7 +359,8 @@ export function createPickerPanel({ lib, multi = lib === "pose", max = MAX_POSES
     if (id) setThumbSrc(pickThumb, thumbSrc(ctx, id, item, thumbOpts(id)));
     pickTitle.textContent = id ? itemLabel(id) : t("state.noneSelected");
     pickId.textContent = id ? `#${id}` : "";
-    pickNote.textContent = missing ? t("uploads.notFound") : id ? "" : t("state.defaultHint");
+    const idNote = isTextOnly(item) ? t("state.textOnly") : "";
+    pickNote.textContent = missing ? t("uploads.notFound") : id ? idNote : t("state.defaultHint");
     if (lib === "costume") renderViewSelect(item);
   }
 

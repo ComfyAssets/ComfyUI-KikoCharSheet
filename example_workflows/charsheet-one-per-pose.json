@@ -176,9 +176,7 @@
         {
           "name": "footwear_en",
           "type": "STRING",
-          "links": [
-            16
-          ],
+          "links": [],
           "slot_index": 4
         },
         {
@@ -186,6 +184,18 @@
           "type": "STRING",
           "links": [],
           "slot_index": 5
+        },
+        {
+          "name": "outfit_en",
+          "type": "STRING",
+          "links": [
+            16
+          ]
+        },
+        {
+          "name": "outfit_zh",
+          "type": "STRING",
+          "links": []
         }
       ],
       "properties": {
@@ -196,7 +206,8 @@
         "crop to size",
         1024,
         1280,
-        true
+        true,
+        2
       ]
     },
     {
@@ -359,7 +370,7 @@
         "Node name for S&R": "StringConcatenate"
       },
       "widgets_values": [
-        "<Picture 1> is the character. <Picture 2> is the outfit. <Picture 3> is the pose. Draw the character from <Picture 1> in the pose and camera angle of <Picture 3>; the mannequin is only a pose guide, not an appearance reference. Dress the character in the complete outfit from <Picture 2>, copying every garment, colour and material exactly from that picture. Photorealistic studio photograph, real person, natural skin texture, soft even lighting. Full body from head to toe, plain light grey studio background. ",
+        "<Picture 1> is the character. <Picture 3> is the pose. Draw the character from <Picture 1> in the pose and camera angle of <Picture 3>; the mannequin is only a pose guide, not an appearance reference. Photorealistic studio photograph, real person, natural skin texture, soft even lighting. Full body from head to toe, plain light grey studio background. ",
         "",
         ""
       ]
@@ -856,7 +867,7 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "## One image per pose\n\nPose Picker outputs a list. ComfyUI runs the nodes after it once per pose, so each pose gets its own image. The portrait and the costume are reused for every run.\n\nThe pose prompt text comes from `pose_prompts_en` for the same pose."
+        "## One image per pose\n\nPose Picker outputs a list. ComfyUI runs the nodes after it once per pose, so each pose gets its own image. The portrait and the costume are reused for every run.\n\nThe outfit sentence comes from the Costume Picker's `outfit_en` and the pose text from `pose_prompts_en` for the same pose. With safe mode off, the first costume is **Nude**: it has no picture, so `outfit_en` describes the outfit in words instead of pointing at <Picture 2>."
       ]
     },
     {
@@ -915,7 +926,7 @@
       "widgets_values": [
         "",
         "",
-        ". The pose: "
+        " The pose: "
       ]
     }
   ],
@@ -1043,7 +1054,7 @@
     [
       16,
       2,
-      4,
+      6,
       14,
       0,
       "STRING"

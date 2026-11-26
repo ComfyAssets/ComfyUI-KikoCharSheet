@@ -37,11 +37,11 @@
    "properties": {
     "Node name for S&R": "SetNode",
     "aux_id": "kijai/ComfyUI-KJNodes",
-    "previousName": "footwear_en"
+    "previousName": "outfit_en"
    },
-   "title": "Set_footwear_en",
+   "title": "Set_outfit_en",
    "widgets_values": [
-    "footwear_en"
+    "outfit_en"
    ],
    "color": "#2a2a3b",
    "bgcolor": "#3f3f59"
@@ -76,9 +76,9 @@
     "Node name for S&R": "GetNode",
     "aux_id": "kijai/ComfyUI-KJNodes"
    },
-   "title": "Get_footwear_en",
+   "title": "Get_outfit_en",
    "widgets_values": [
-    "footwear_en"
+    "outfit_en"
    ],
    "color": "#2a2a3b",
    "bgcolor": "#3f3f59"
@@ -2312,13 +2312,25 @@
      "localized_name": "footwear_en",
      "name": "footwear_en",
      "type": "STRING",
+     "links": []
+    },
+    {
+     "localized_name": "footwear_zh",
+     "name": "footwear_zh",
+     "type": "STRING",
+     "links": []
+    },
+    {
+     "localized_name": "outfit_en",
+     "name": "outfit_en",
+     "type": "STRING",
      "links": [
       30
      ]
     },
     {
-     "localized_name": "footwear_zh",
-     "name": "footwear_zh",
+     "localized_name": "outfit_zh",
+     "name": "outfit_zh",
      "type": "STRING",
      "links": []
     }
@@ -2332,7 +2344,8 @@
     "crop to size",
     1024,
     1280,
-    true
+    true,
+    2
    ],
    "color": "#417505"
   },
@@ -2507,11 +2520,11 @@
    "properties": {
     "Node name for S&R": "StringConcatenate"
    },
-   "title": "Footwear + pose text",
+   "title": "Outfit + pose text",
    "widgets_values": [
     "",
     "",
-    ". The pose: "
+    " The pose: "
    ],
    "color": "#F5A623"
   },
@@ -2573,7 +2586,7 @@
    },
    "title": "Prompt (pose text is added at the end)",
    "widgets_values": [
-    "<Picture 1> is the character. <Picture 2> is the outfit. <Picture 3> is the pose. Draw the character from <Picture 1> in the pose and camera angle of <Picture 3>; the mannequin is only a pose guide, not an appearance reference. Dress the character in the complete outfit from <Picture 2>, copying every garment, colour and material exactly from that picture. Photorealistic studio photograph, real person, natural skin texture, soft even lighting. Full body from head to toe, plain light grey studio background. ",
+    "<Picture 1> is the character. <Picture 3> is the pose. Draw the character from <Picture 1> in the pose and camera angle of <Picture 3>; the mannequin is only a pose guide, not an appearance reference. Photorealistic studio photograph, real person, natural skin texture, soft even lighting. Full body from head to toe, plain light grey studio background. ",
     "",
     ""
    ],
@@ -3763,7 +3776,7 @@
    },
    "title": "How to use",
    "widgets_values": [
-    "## One image per pose (H3 Image)\n\nDraws one character in one outfit, once per picked pose, with MiniMax H3 Image.\n\n**Run:**\n1. **Portrait:** pick or upload the character.\n2. **Costume:** pick the outfit and its view. Footwear text is added to the prompt when *include_footwear* is on.\n3. **Poses:** pick one or more poses. The Pose Picker outputs a list, so every node after it runs once per pose and\n   each pose gets its own image. The portrait and the costume are reused for every run.\n4. **Size:** pick a chip on the Model Resolution Picker. It sets the output size and the pose mannequin size.\n5. Queue.\n\n**Prompt:** the text box holds the main prompt. The footwear text and the pose text (`pose_prompts_en` for the same\npose) are added to its end.\n\n**Settings** (from the source): euler / simple, 6 steps, CFG 1, negative zeroed, seed 42 fixed. VRAM is purged after\nthe text encoder and before VAE decode.\n\n**LoRAs:** add H3 Image LoRAs in *LoRAs (H3 Image)*. It is empty by default. Their trigger words appear in *Trigger\nwords* and go in front of the prompt; untick any you do not want.\n\n**Custom nodes:** ComfyUI-KikoCharSheet, LoRA Manager, KikoTools, KJNodes, rgthree-comfy.\n\n**First run: download the models.** In *Toggle stages*, turn on **Download models** and queue once; files you already have are skipped without going online. Then turn it off again. Civitai models and gated Hugging Face models need a token, set where ComfyUI starts (never in the workflow, which would share it):\n\nLinux / macOS (`~/.bashrc`, `~/.zshrc` or your start script):\n```\nexport CIVITAI_API_KEY=\"your-civitai-key\"\nexport HF_TOKEN=\"hf_your-token\"\n```\nWindows (Command Prompt once, then a new window):\n```\nsetx CIVITAI_API_KEY \"your-civitai-key\"\nsetx HF_TOKEN \"hf_your-token\"\n```\nPortable build: add `set CIVITAI_API_KEY=...` and `set HF_TOKEN=...` above the `python` line in `run_nvidia_gpu.bat`. Restart ComfyUI after setting them. Keys: civitai.com \u2192 Account settings \u2192 API Keys; huggingface.co \u2192 Settings \u2192 Access Tokens."
+    "## One image per pose (H3 Image)\n\nDraws one character in one outfit, once per picked pose, with MiniMax H3 Image.\n\n**Run:**\n1. **Portrait:** pick or upload the character.\n2. **Costume:** pick the outfit and its view. Footwear text is added to the prompt when *include_footwear* is on. With safe mode\n   off, the first costume is **Nude**: it has no picture, so the prompt describes the outfit in words.\n3. **Poses:** pick one or more poses. The Pose Picker outputs a list, so every node after it runs once per pose and\n   each pose gets its own image. The portrait and the costume are reused for every run.\n4. **Size:** pick a chip on the Model Resolution Picker. It sets the output size and the pose mannequin size.\n5. Queue.\n\n**Prompt:** the text box holds the main prompt. The outfit sentence (the Costume Picker's `outfit_en`, which names\n<Picture 2> and the footwear) and the pose text (`pose_prompts_en` for the same pose) are added to its end.\n\n**Settings** (from the source): euler / simple, 6 steps, CFG 1, negative zeroed, seed 42 fixed. VRAM is purged after\nthe text encoder and before VAE decode.\n\n**LoRAs:** add H3 Image LoRAs in *LoRAs (H3 Image)*. It is empty by default. Their trigger words appear in *Trigger\nwords* and go in front of the prompt; untick any you do not want.\n\n**Custom nodes:** ComfyUI-KikoCharSheet, LoRA Manager, KikoTools, KJNodes, rgthree-comfy.\n\n**First run: download the models.** In *Toggle stages*, turn on **Download models** and queue once; files you already have are skipped without going online. Then turn it off again. Civitai models and gated Hugging Face models need a token, set where ComfyUI starts (never in the workflow, which would share it):\n\nLinux / macOS (`~/.bashrc`, `~/.zshrc` or your start script):\n```\nexport CIVITAI_API_KEY=\"your-civitai-key\"\nexport HF_TOKEN=\"hf_your-token\"\n```\nWindows (Command Prompt once, then a new window):\n```\nsetx CIVITAI_API_KEY \"your-civitai-key\"\nsetx HF_TOKEN \"hf_your-token\"\n```\nPortable build: add `set CIVITAI_API_KEY=...` and `set HF_TOKEN=...` above the `python` line in `run_nvidia_gpu.bat`. Restart ComfyUI after setting them. Keys: civitai.com → Account settings → API Keys; huggingface.co → Settings → Access Tokens."
    ],
    "color": "#432",
    "bgcolor": "#653"
@@ -3898,7 +3911,7 @@
   [
    30,
    2,
-   4,
+   6,
    28,
    0,
    "STRING"
